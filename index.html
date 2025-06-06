@@ -235,18 +235,18 @@
         #prev-tutorial-btn, #prev-combat-tutorial-btn { background-color: #777; border-bottom-color: #555; }
         #prev-tutorial-btn:hover, #prev-combat-tutorial-btn:hover { background-color: #666; }
 
-        /* --- YENİ: Gelişmiş Rehber Stilleri --- */
+        /* --- Gelişmiş Rehber Stilleri --- */
         .highlight-tutorial-element {
-            box-shadow: 0 0 0 4px rgba(91, 192, 222, 0.8) !important; /* Mavi bir parlama efekti */
+            box-shadow: 0 0 0 4px rgba(91, 192, 222, 0.8) !important;
             border-radius: 6px;
             transition: box-shadow 0.4s ease-in-out;
             position: relative;
-            z-index: 10001 !important; /* Rehber kutusunun arkasında ama diğer her şeyin önünde */
+            z-index: 10001 !important;
         }
         #tutorial-popover {
             display: none;
-            position: absolute; /* Sabit değil, dinamik konumlandırılacak */
-            z-index: 10002; /* Her şeyin en önünde */
+            position: absolute; 
+            z-index: 10002; 
             background-color: #f9f9f9;
             border: 1px solid #ccc;
             border-radius: 8px;
@@ -256,7 +256,7 @@
             transition: top 0.3s ease, left 0.3s ease;
             border-left: 5px solid #5bc0de;
         }
-        #tutorial-popover::after { /* İşaretçi oku için */
+        #tutorial-popover::after { 
             content: '';
             position: absolute;
             width: 0; 
@@ -264,13 +264,13 @@
             border-left: 10px solid transparent;
             border-right: 10px solid transparent;
         }
-        #tutorial-popover.arrow-top::after { /* Ok yukarıda olduğunda */
+        #tutorial-popover.arrow-top::after {
             bottom: 100%;
             left: 50%;
             transform: translateX(-50%);
             border-bottom: 10px solid #f9f9f9;
         }
-        #tutorial-popover.arrow-bottom::after { /* Ok aşağıda olduğunda */
+        #tutorial-popover.arrow-bottom::after {
             top: 100%;
             left: 50%;
             transform: translateX(-50%);
@@ -280,7 +280,6 @@
         #tutorial-popover p { font-size: 1.05em; line-height: 1.6; color: #333; }
         #tutorial-popover .modal-buttons button { padding: 10px 22px; }
 
-        /* --- Savaş Sistemi Rehberi için eski stil --- */
         #combat-tutorial-modal .modal-content { border-left: 5px solid #337ab7; }
 
         /* BATTLE MODAL STYLES */
@@ -297,15 +296,34 @@
         /* --- Mobil Cihazlar İçin Duyarlılık Ayarları --- */
         @media (max-width: 768px) {
             #main-controls, #game-management-controls {
-                flex-wrap: wrap; /* Butonların taşmasını engeller ve alt satıra indirir */
+                flex-wrap: wrap; 
                 gap: 10px;
             }
 
-            #info-and-controls, #map-container {
-                grid-template-columns: 1fr; /* Bilgi kutularını ve haritayı dikey olarak sıralar */
+            #info-and-controls {
+                grid-template-columns: 1fr; 
             }
-             #map-container {
-                grid-template-rows: repeat(auto-fill, 120px);
+            
+            #map-container {
+                grid-template-columns: repeat(2, 1fr); 
+                grid-template-rows: repeat(10, 100px); 
+            }
+
+            #tutorial-popover {
+                position: fixed !important; 
+                bottom: 0;
+                left: 0;
+                right: 0;
+                top: auto !important;
+                transform: none !important;
+                width: auto;
+                max-width: 100%;
+                border-radius: 12px 12px 0 0; 
+                border-bottom: none;
+            }
+
+            #tutorial-popover::after {
+                display: none; 
             }
         }
     </style>
@@ -535,9 +553,12 @@
         // --- BAŞLANGIÇ VE TEMEL OYUN DEĞİŞKENLERİ ---
         const PLAYER_KINGDOM_ID = "OYUNCU_KRALLIGI";
         const NEW_POWERFUL_RIVAL_ID = "DEMIR_YUMRUK_IMPARATORLUGU";
+        const REBELS_ID = "ISYANCILAR"; // YENİ: İsyancı krallığı ID'si
+
         let KINGDOM_DETAILS = {
             [PLAYER_KINGDOM_ID]: { name: "Benim Krallığım", color: "#42a5f5", isPlayer: true, aiControlled: false },
             [NEW_POWERFUL_RIVAL_ID]: { name: "Demir Yumruk İmparatorluğu", color: "#616161", aiControlled: true },
+            [REBELS_ID]: { name: "İsyancılar", color: "#757575", aiControlled: true, isRebel: true }, // YENİ: İsyancı krallığı
             RIVAL_K1: { name: "Kuzey Muhafızları", color: "#ef5350", aiControlled: true },
             RIVAL_K2: { name: "Doğu Beyliği", color: "#ffca28", aiControlled: true },
             RIVAL_K3: { name: "Batı Baronluğu", color: "#66bb6a", aiControlled: true },
@@ -579,13 +600,13 @@
         gameplayMusic.addEventListener('ended', () => {
             currentTrackIndex++;
             if (currentTrackIndex >= gameplayPlaylist.length) {
-                currentTrackIndex = 0; // Listenin başına dön
+                currentTrackIndex = 0; 
             }
             gameplayMusic.src = gameplayPlaylist[currentTrackIndex];
             gameplayMusic.play();
         });
 
-        // --- GÜNCELLENDİ: Gelişmiş Rehber Sistemi ---
+        // --- Gelişmiş Rehber Sistemi ---
         const tutorialPopover = document.getElementById('tutorial-popover');
         const tutorialTextEl = document.getElementById('tutorial-text');
         const tutorialTitleEl = document.getElementById('tutorial-title');
@@ -655,7 +676,7 @@
                 highlightedElement.classList.remove('highlight-tutorial-element');
             }
             tutorialPopover.classList.remove('arrow-top', 'arrow-bottom');
-            tutorialPopover.style.transform = 'none'; // Merkezi konumu sıfırla
+            tutorialPopover.style.transform = 'none';
 
             const step = tutorialSteps[currentTutorialStepIdx];
             if (!step) {
@@ -674,37 +695,49 @@
                 targetElement.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
                 
                 setTimeout(() => {
-                    const targetRect = targetElement.getBoundingClientRect();
-                    const popoverRect = tutorialPopover.getBoundingClientRect();
-                    
-                    let top, left;
-                    
-                    if (targetRect.bottom + popoverRect.height + 20 < window.innerHeight) {
-                        top = targetRect.bottom + 10;
-                        tutorialPopover.classList.add('arrow-top');
-                    } else { 
-                        top = targetRect.top - popoverRect.height - 10;
-                         tutorialPopover.classList.add('arrow-bottom');
-                    }
-                    
-                    left = targetRect.left + (targetRect.width / 2) - (tutorialPopover.offsetWidth / 2);
+                    // Sadece masaüstünde dinamik konumlandırma yap
+                    if (window.innerWidth > 768) {
+                        const targetRect = targetElement.getBoundingClientRect();
+                        const popoverRect = tutorialPopover.getBoundingClientRect();
+                        
+                        let top, left;
+                        
+                        if (targetRect.bottom + popoverRect.height + 20 < window.innerHeight) {
+                            top = targetRect.bottom + 10;
+                            tutorialPopover.classList.add('arrow-top');
+                        } else { 
+                            top = targetRect.top - popoverRect.height - 10;
+                            tutorialPopover.classList.add('arrow-bottom');
+                        }
+                        
+                        left = targetRect.left + (targetRect.width / 2) - (tutorialPopover.offsetWidth / 2);
 
-                    if (left < 10) left = 10;
-                    if (left + tutorialPopover.offsetWidth > window.innerWidth - 10) {
-                        left = window.innerWidth - tutorialPopover.offsetWidth - 10;
-                    }
+                        if (left < 10) left = 10;
+                        if (left + tutorialPopover.offsetWidth > window.innerWidth - 10) {
+                            left = window.innerWidth - tutorialPopover.offsetWidth - 10;
+                        }
 
-                    tutorialPopover.style.top = `${window.scrollY + top}px`;
-                    tutorialPopover.style.left = `${window.scrollX + left}px`;
+                        tutorialPopover.style.top = `${window.scrollY + top}px`;
+                        tutorialPopover.style.left = `${window.scrollX + left}px`;
+                    } else {
+                        tutorialPopover.style.top = '';
+                        tutorialPopover.style.left = '';
+                    }
                     tutorialPopover.style.display = 'block';
 
                 }, 400);
 
             } else { 
                 tutorialPopover.style.display = 'block';
-                tutorialPopover.style.top = '50%';
-                tutorialPopover.style.left = '50%';
-                tutorialPopover.style.transform = 'translate(-50%, -50%)';
+                 if (window.innerWidth > 768) {
+                    tutorialPopover.style.top = '50%';
+                    tutorialPopover.style.left = '50%';
+                    tutorialPopover.style.transform = 'translate(-50%, -50%)';
+                } else {
+                    tutorialPopover.style.top = '';
+                    tutorialPopover.style.left = '';
+                    tutorialPopover.style.transform = '';
+                }
             }
 
             prevTutorialBtn.style.display = currentTutorialStepIdx > 0 ? 'inline-block' : 'none';
@@ -726,8 +759,6 @@
         });
         endTutorialBtn.addEventListener('click', endTutorial);
 
-
-        // Savaş rehberi (eski sistemde kaldı, istenirse bu da geliştirilebilir)
         function startCombatTutorial() { currentCombatTutorialStepIdx = 0; showCombatTutorialStep(); }
         function showCombatTutorialStep() {
              if (currentCombatTutorialStepIdx < 0 || currentCombatTutorialStepIdx >= combatTutorialSteps.length) return;
@@ -741,7 +772,6 @@
         nextCombatTutorialBtn.addEventListener('click', () => { if (currentCombatTutorialStepIdx < combatTutorialSteps.length - 1) { currentCombatTutorialStepIdx++; showCombatTutorialStep(); } });
         prevCombatTutorialBtn.addEventListener('click', () => { if (currentCombatTutorialStepIdx > 0) { currentCombatTutorialStepIdx--; showCombatTutorialStep(); } });
         endCombatTutorialBtn.addEventListener('click', () => combatTutorialModal.style.display = 'none');
-
 
         // --- OYUN KURULUMU VE YÖNETİMİ ---
         function createNewGameState(playerName) {
@@ -775,8 +805,16 @@
                     document.getElementById('game-window').style.display = 'block';
                     document.body.style.backgroundColor = '#e9ebee';
                     
-                    gameplayMusic.src = gameplayPlaylist[currentTrackIndex];
-                    gameplayMusic.play().catch(e => console.log("Kullanıcı etkileşimi olmadan oyun içi müzik başlatılamadı."));
+                    // DÜZELTME: Müzik artık ilk tıklamada başlayacak
+                    function startGameMusicOnFirstClick() {
+                        if (gameplayMusic.paused) {
+                            gameplayMusic.src = gameplayPlaylist[currentTrackIndex];
+                            gameplayMusic.play().catch(e => console.error("Müzik başlatılamadı:", e));
+                        }
+                        // Dinleyiciyi bir kere çalıştıktan sonra kaldır
+                        document.getElementById('game-window').removeEventListener('click', startGameMusicOnFirstClick);
+                    }
+                    document.getElementById('game-window').addEventListener('click', startGameMusicOnFirstClick);
 
                     updateUI();
                     renderMessages();
@@ -797,7 +835,7 @@
                 localStorage.removeItem('tahtSavaslariTutorialCompleted');
                 
                 gameplayMusic.pause();
-                endTutorial(); // Rehber açıksa kapat
+                endTutorial(); 
 
                 document.getElementById('game-window').style.display = 'none';
                 document.getElementById('start-menu').style.display = 'flex';
@@ -845,8 +883,16 @@
             const selectedRegion = gameState.regions[gameState.selectedRegionId] || {};
             const ownerKingdom = gameState.kingdoms[selectedRegion.owner] || {};
 
-            // --- DÜZELTİLDİ ---
-            document.getElementById('kingdom-name-display').innerHTML = selectedRegion.name ? `${selectedRegion.name} (${ownerKingdom.name || 'Sahipsiz'})` : playerKingdom.name;
+            // DÜZELTME: Krallık adı görüntüleme hatası ve İsyancı garnizonu gösterimi
+            let displayText = playerKingdom.name;
+            if (selectedRegion.name) {
+                if (selectedRegion.owner === REBELS_ID) {
+                     displayText = `${selectedRegion.name} (İsyancılar) - Savunma: ${selectedRegion.infantry} 🚶`;
+                } else {
+                     displayText = `${selectedRegion.name} (${ownerKingdom.name || 'Sahipsiz'})`;
+                }
+            }
+            document.getElementById('kingdom-name-display').innerHTML = displayText;
             
             document.getElementById('infantry-count').textContent = playerKingdom.army.infantry;
             document.getElementById('archer-count').textContent = playerKingdom.army.archer;
@@ -906,7 +952,6 @@
         }
 
     // --- MODAL & BUTTON LOGIC ---
-    // Barracks Modal
     const barracksModal = document.getElementById('barracks-modal');
     document.getElementById('barracks-btn').addEventListener('click', () => {
         sfxBarracks.play(); 
@@ -959,7 +1004,7 @@
 
     const taxModal = document.getElementById('tax-modal');
     document.getElementById('tax-btn').addEventListener('click', () => {
-        sfxTax.play(); // Ses efekti
+        sfxTax.play();
         const player = gameState.kingdoms[PLAYER_KINGDOM_ID];
         document.getElementById('tax-rate-slider').value = player.taxRate;
         updateTaxModalDetails(player); taxModal.style.display = 'block';
@@ -989,12 +1034,13 @@
         if (gameState.playerAttackedThisTurn) { addMessage("Bu tur zaten bir savaş başlattınız.", "error"); return; }
         const targetRegion = gameState.regions[gameState.selectedRegionId];
         if (!targetRegion || targetRegion.owner === PLAYER_KINGDOM_ID || !targetRegion.owner) { addMessage("Savaş açmak için bir düşman bölgesi seçin.", "error"); return; }
-        if (!areKingdomsAdjacent(PLAYER_KINGDOM_ID, targetRegion.owner)) { addMessage("Bu krallıkla sınır komşusu değilsiniz!", "error"); return; }
-        const player = gameState.kingdoms[PLAYER_KINGDOM_ID];
-        if ((player.army.infantry + player.army.archer + player.army.cavalry) < 40) { addMessage("Savaş açmak için en az 40 birimlik bir orduya sahip olmalısınız.", "error"); return; }
+        if (targetRegion.owner === REBELS_ID) { // İsyancılara saldırı
+             gameState.activeBattle = { attackerId: PLAYER_KINGDOM_ID, defenderId: REBELS_ID, targetRegionId: targetRegion.id, playerRole: 'attacker' };
+        } else { // Normal krallığa saldırı
+             gameState.activeBattle = { attackerId: PLAYER_KINGDOM_ID, defenderId: targetRegion.owner, targetRegionId: targetRegion.id, playerRole: 'attacker' };
+        }
         
-        sfxAttack.play(); // Ses efekti
-        gameState.activeBattle = { attackerId: PLAYER_KINGDOM_ID, defenderId: targetRegion.owner, targetRegionId: targetRegion.id, playerRole: 'attacker' };
+        sfxAttack.play();
         openBattleModal();
     });
 
@@ -1015,7 +1061,7 @@
     }
 
     function openDefenseModal() {
-        sfxDefenseAlert.play(); // Ses efekti
+        sfxDefenseAlert.play();
         const attacker = gameState.kingdoms[gameState.activeBattle.attackerId];
         document.getElementById('defense-modal-title').textContent = `${attacker.name} Saldırısına Karşı Savunma Planı`;
         const grid = document.getElementById('defense-grid');
@@ -1093,16 +1139,18 @@
         battle.attackerAllocation = getPlayerAllocation('battle-grid');
         if (!battle.attackerAllocation) return;
         
-        const defender = gameState.kingdoms[battle.defenderId];
+        const defenderId = battle.defenderId;
         const defendingRegion = gameState.regions[battle.targetRegionId];
-        let defendingArmy = defender.army;
-        // Eğer saldırılan bölge başkent değilse, ordunun sadece bir kısmını kullan
-        if (!defendingRegion.isKingdomCapital) {
-            defendingArmy = {
-                infantry: Math.floor(defender.army.infantry * 0.4),
-                archer: Math.floor(defender.army.archer * 0.4),
-                cavalry: Math.floor(defender.army.cavalry * 0.4),
-            };
+        let defendingArmy;
+
+        if (defenderId === REBELS_ID) {
+            defendingArmy = { infantry: defendingRegion.infantry, archer: 0, cavalry: 0 };
+        } else {
+            const defender = gameState.kingdoms[defenderId];
+            defendingArmy = {...defender.army};
+            if (!defendingRegion.isKingdomCapital) {
+                Object.keys(defendingArmy).forEach(key => defendingArmy[key] = Math.floor(defendingArmy[key] * 0.4));
+            }
         }
         battle.defenderAllocation = aiDistributeTroops(defendingArmy);
         resolveBattle();
@@ -1118,42 +1166,52 @@
     });
 
     function resolveBattle() {
-        const battle = gameState.activeBattle, attacker = gameState.kingdoms[battle.attackerId], defender = gameState.kingdoms[battle.defenderId];
+        const battle = gameState.activeBattle;
+        const attacker = gameState.kingdoms[battle.attackerId];
+        const defender = battle.defenderId === REBELS_ID ? null : gameState.kingdoms[battle.defenderId];
+        
         let attackerTilesWon = 0;
         for (let i = 0; i < 4; i++) {
-            const attTile = battle.attackerAllocation[i], defTile = battle.defenderAllocation[i];
+            const attTile = battle.attackerAllocation[i];
+            const defTile = battle.defenderAllocation[i];
             const attPower = (attTile.infantry * 1) + (attTile.archer * 1.25) + (attTile.cavalry * 1.5);
             const defPower = (defTile.infantry * 1) + (defTile.archer * 1.25) + (defTile.cavalry * 1.5);
+            
             if (attPower > defPower) {
                 attackerTilesWon++;
-                defender.army.infantry -= defTile.infantry; defender.army.archer -= defTile.archer; defender.army.cavalry -= defTile.cavalry;
+                if(defender) {
+                    defender.army.infantry -= defTile.infantry; defender.army.archer -= defTile.archer; defender.army.cavalry -= defTile.cavalry;
+                }
                 attacker.army.infantry -= Math.floor(attTile.infantry * 0.3); attacker.army.archer -= Math.floor(attTile.archer * 0.3); attacker.army.cavalry -= Math.floor(attTile.cavalry * 0.3);
             } else {
                 attacker.army.infantry -= attTile.infantry; attacker.army.archer -= attTile.archer; attacker.army.cavalry -= attTile.cavalry;
-                defender.army.infantry -= Math.floor(defTile.infantry * 0.3); defender.army.archer -= Math.floor(defTile.archer * 0.3); defender.army.cavalry -= Math.floor(defTile.cavalry * 0.3);
+                if (defender) {
+                    defender.army.infantry -= Math.floor(defTile.infantry * 0.3); defender.army.archer -= Math.floor(defTile.archer * 0.3); defender.army.cavalry -= Math.floor(defTile.cavalry * 0.3);
+                }
             }
         }
         Object.keys(attacker.army).forEach(k => attacker.army[k] = Math.max(0, attacker.army[k]));
-        Object.keys(defender.army).forEach(k => defender.army[k] = Math.max(0, defender.army[k]));
+        if(defender) Object.keys(defender.army).forEach(k => defender.army[k] = Math.max(0, defender.army[k]));
         
         if (attackerTilesWon >= 3) {
-            addMessage(`${attacker.name}, ${defender.name}'a ait ${gameState.regions[battle.targetRegionId].name} bölgesini fethetti!`, "battle_win");
+            addMessage(`${attacker.name}, ${KINGDOM_DETAILS[battle.defenderId].name}'a ait ${gameState.regions[battle.targetRegionId].name} bölgesini fethetti!`, "battle_win");
             gameState.regions[battle.targetRegionId].owner = battle.attackerId;
+            gameState.regions[battle.targetRegionId].infantry = 0; // Fethedilen bölgedeki garnizonu sıfırla
             if(attacker.isPlayer) attacker.lastExpansionTurn = gameState.turn;
 
-            if (battle.attackerId === PLAYER_KINGDOM_ID) {
-                sfxVictory.play();
-            } else if (battle.defenderId === PLAYER_KINGDOM_ID) {
-                sfxDefeat.play();
-            }
+            if (battle.attackerId === PLAYER_KINGDOM_ID) sfxVictory.play();
+            else if (battle.defenderId === PLAYER_KINGDOM_ID) sfxDefeat.play();
+
         } else {
-            addMessage(`${attacker.name} saldırısı, ${defender.name} tarafından püskürtüldü!`, "battle_lose");
+            addMessage(`${attacker.name} saldırısı, ${KINGDOM_DETAILS[battle.defenderId].name} tarafından püskürtüldü!`, "battle_lose");
             
-            if (battle.attackerId === PLAYER_KINGDOM_ID) {
-                sfxDefeat.play();
-            } else if (battle.defenderId === PLAYER_KINGDOM_ID) {
-                sfxVictory.play();
+            if (battle.isRebellion) {
+                 gameState.regions[battle.targetRegionId].owner = REBELS_ID;
+                 gameState.regions[battle.targetRegionId].infantry = 100;
             }
+
+            if (battle.attackerId === PLAYER_KINGDOM_ID) sfxDefeat.play();
+            else if (battle.defenderId === PLAYER_KINGDOM_ID) sfxVictory.play();
         }
         gameState.activeBattle = null;
         if (attacker.isPlayer) gameState.playerAttackedThisTurn = true;
@@ -1174,14 +1232,19 @@
         const nextTurnBtn = document.getElementById('next-turn-btn');
         if (nextTurnBtn.disabled) return;
         nextTurnBtn.disabled = true;
-        gameState.turn++;
-        gameState.playerAttackedThisTurn = false;
-        if (gameState.turn > 1 && gameState.turn % 20 === 0) { gameState.upkeepModifier += 0.05; addMessage(`Artan krallık masrafları nedeniyle asker bakım maliyetleri %5 arttı!`, "info"); }
         
+        let continueTurn = processAiTurns();
+        if(continueTurn) {
+            finishTurn();
+        }
+    }
+
+    function processAiTurns() {
+        // Yapay zeka hamleleri...
         const player = gameState.kingdoms[PLAYER_KINGDOM_ID];
         for (const kId in gameState.kingdoms) {
             const kingdom = gameState.kingdoms[kId];
-            if (kingdom.aiControlled && kingdom.id !== player.id) {
+            if (kingdom.aiControlled && !kingdom.isRebel && kId !== player.id) { // İsyancılar saldırmaz
                 if(areKingdomsAdjacent(kId, PLAYER_KINGDOM_ID)) {
                     let aggressionChance = 0.05;
                     if (kingdom.population > player.population * 1.2) aggressionChance += 0.1;
@@ -1192,25 +1255,55 @@
                             const targetRegion = targetablePlayerRegions[Math.floor(Math.random() * targetablePlayerRegions.length)];
                             gameState.activeBattle = { attackerId: kId, defenderId: PLAYER_KINGDOM_ID, targetRegionId: targetRegion.id, playerRole: 'defender', attackerAllocation: aiDistributeTroops(kingdom.army), defenderAllocation: {} };
                             openDefenseModal();
-                            return; 
+                            return false; // Turu durdur, savunma bekleniyor
                         }
                     }
                 }
             }
         }
-        finishTurn();
+        return true; // Tur normal devam etsin
     }
 
     function finishTurn() {
+        gameState.turn++;
+        gameState.playerAttackedThisTurn = false;
+        if (gameState.turn > 1 && gameState.turn % 20 === 0) { gameState.upkeepModifier += 0.05; addMessage(`Artan krallık masrafları nedeniyle asker bakım maliyetleri %5 arttı!`, "info"); }
+
         for (const kId in gameState.kingdoms) {
             const kingdom = gameState.kingdoms[kId];
             kingdom.gold += calculateIncome(kingdom);
             kingdom.gold -= calculateUpkeep(kingdom);
-            if (kingdom.id === PLAYER_KINGDOM_ID) {
-                if (kingdom.gold > 10000) { const cost = Math.floor((kingdom.gold - 10000) * 0.02); kingdom.gold -= cost; if(cost > 0) addMessage(`Yolsuzluk nedeniyle ${cost} altın kayboldu.`, "error"); }
-                if (Math.random() < 0.20) triggerRandomEvent(kingdom);
+        }
+
+        // YENİ: İsyan kontrolü
+        const player = gameState.kingdoms[PLAYER_KINGDOM_ID];
+        let rebellionChance = (player.taxRate > 25) ? (player.taxRate - 25) / 100 : 0;
+        if (player.happiness < 40) rebellionChance += (40 - player.happiness) / 100;
+        
+        if (Math.random() < rebellionChance) {
+            const potentialRebelRegions = Object.values(gameState.regions).filter(r => r.owner === PLAYER_KINGDOM_ID && !r.isKingdomCapital);
+            if (potentialRebelRegions.length > 0) {
+                const rebelRegion = potentialRebelRegions[Math.floor(Math.random() * potentialRebelRegions.length)];
+                addMessage(`${rebelRegion.name} bölgesinde yüksek vergiler ve mutsuzluk nedeniyle isyan çıktı!`, "rebellion");
+
+                if (!gameState.kingdoms[REBELS_ID]) {
+                    const details = KINGDOM_DETAILS[REBELS_ID];
+                    gameState.kingdoms[REBELS_ID] = { id: REBELS_ID, name: details.name, isPlayer: false, aiControlled: true, gold: 0, population: 0, army: { infantry: 0, archer: 0, cavalry: 0 }};
+                }
+
+                gameState.activeBattle = { 
+                    attackerId: REBELS_ID, 
+                    defenderId: PLAYER_KINGDOM_ID, 
+                    targetRegionId: rebelRegion.id, 
+                    playerRole: 'defender', 
+                    isRebellion: true, // İsyan savaşı olduğunu belirt
+                    attackerAllocation: aiDistributeTroops({infantry: 100, archer: 0, cavalry: 0}) 
+                };
+                openDefenseModal();
+                return; // Turu durdur, isyan savunması bekleniyor
             }
         }
+
         addMessage(`Tur ${gameState.turn} sona erdi.`, "info");
         updateUI();
         const isGameOver = checkGameEndConditions();
