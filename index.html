@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taht Savaşları</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a1a;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            user-select: none;
+            transition: background-color 0.5s ease;
+        }
+
+        /* --- YENİ: Başlangıç Menüsü Stilleri --- */
+        #start-menu {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('arka-plan.png');
+            background-size: cover;
+            background-position: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+            width: 728px;
+            height: auto;
+            border: 2px solid #555;
+        }
+
+        #start-menu h1 {
+            font-size: 2.5em;
+            margin-top: 10px;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px 6px #000;
+            letter-spacing: 2px;
+            color: #fff;
+        }
+
+        #start-menu input {
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 2px solid #888;
+            border-radius: 5px;
+            background-color: rgba(255, 255, 255, 0.9);
+            font-size: 1.1em;
+            width: 60%;
+            max-width: 300px;
+            text-align: center;
+            color: #333;
+        }
+
+        #start-menu button {
+            padding: 12px 35px;
+            font-size: 1.2em;
+            font-weight: bold;
+            background: linear-gradient(145deg, #65c365, #4caf50);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        #start-menu button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        /* --- Oyun Arayüzü Başlangıçta Gizli --- */
+        #game-window {
+            display: none;
+            width: 90%;
+            max-width: 1200px;
+            background-color: #ffffff;
+            border: 1px solid #d1d1d1;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        #map-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(4, 120px);
+            gap: 6px;
+            background-color: #d8e0e8;
+            border: 1px solid #b0c4de;
+            margin-bottom: 20px;
+            padding: 6px;
+            border-radius: 6px;
+            position: relative; 
+        }
+
+        .map-region {
+            border: 1px solid #777;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+            position: relative; 
+            overflow: hidden; 
+            background-size: cover;
+            background-position: center;
+            border-radius: 4px;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
+        }
+        .map-region.selected-region {
+            border: 3px solid #ffeb3b;
+            box-shadow: 0 0 15px rgba(255, 235, 59, 0.7);
+            transform: scale(1.02);
+        }
+        .map-region:hover:not(.selected-region) {
+            transform: scale(1.03);
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+        .map-region .region-name {
+            background-color: rgba(0,0,0,0.65);
+            color: white;
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+            font-size: 0.8em;
+            text-shadow: 1px 1px 2px #000;
+        }
+        .map-region .region-owner {
+            font-size: 0.7em;
+            color: #f0f0f0;
+            margin-top: 4px;
+            background-color: rgba(0,0,0,0.5);
+            padding: 2px 4px;
+            border-radius: 2px;
+            text-shadow: 1px 1px 1px #000;
+        }
+         .map-region .rebellion-text {
+            color: #ffc107 !important;
+            position: absolute;
+            bottom: 3px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: bold;
+            background: rgba(211, 47, 47, 0.85) !important;
+            font-size: 0.75em !important;
+            padding: 2px 5px !important;
+            border-radius: 3px;
+            text-shadow: 1px 1px 1px #000;
+            z-index: 5;
+        }
+
+        /* Kingdom Specific Colors */
+        #OYUNCU_BOLGE_A, #OYUNCU_BOLGE_B, #OYUNCU_BOLGE_C { background-color: #42a5f5; }
+        #YENI_RAKIP_BOLGE_B, #YENI_RAKIP_BOLGE_C { background-color: #616161; }
+        #RIVAL_K1_A, #RIVAL_K1_B, #RIVAL_K1_C { background-color: #ef5350; }
+        #RIVAL_K2 { background-color: #ffca28; }
+        #RIVAL_K3 { background-color: #66bb6a; }
+        #RIVAL_K4 { background-color: #ab47bc; }
+        #RIVAL_K5_A { background-color: #00bcd4; }
+        
+        .water-area { background-color: #81d4fa !important; cursor: default !important; border-color: #5cacee; }
+        .water-area:hover { transform: none; box-shadow: none; }
+        .mountain-area { background-color: #a1887f !important; cursor: default !important; border-color: #795548; }
+        .mountain-area:hover { transform: none; box-shadow: none; }
+
+        #info-and-controls { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; border: 1px solid #ccd1d9; padding: 15px; background-color: #f7f9fc; border-radius: 6px; }
+        .info-section { padding: 12px; border: 1px solid #dde2e7; background-color: #ffffff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .info-section h4 { margin-top: 0; margin-bottom: 10px; border-bottom: 1px solid #e7eaf0; padding-bottom: 6px; color: #333; }
+        .info-section p { margin: 5px 0; font-size: 0.9em; color: #555; }
+        #kingdom-name-display { grid-column: 1 / -1; text-align: center; font-size: 1.3em; font-weight: bold; margin-bottom: 15px; padding: 8px; background-color: #e3e9ef; border: 1px solid #c8d0d8; border-radius: 4px; color: #2c3e50; }
+        #main-controls { display: flex; justify-content: space-around; margin-bottom: 20px; }
+        #main-controls button { padding: 12px 22px; font-size: 1em; color: white; border: none; border-radius: 5px; cursor: pointer; transition: background-color 0.2s, border-bottom-color 0.2s, transform 0.1s; min-width: 160px; }
+        #main-controls button:hover:not(:disabled) { transform: translateY(-1px); }
+        #main-controls button:disabled { background-color: #d8d8d8; border-bottom: 3px solid #b8b8b8; color: #888; cursor: not-allowed; }
+        #attack-btn { background-color: #d9534f; border-bottom: 3px solid #c9302c; }
+        #attack-btn:hover:not(:disabled) { background-color: #c9302c; border-bottom-color: #ac2925; }
+        #barracks-btn { background-color: #5cb85c; border-bottom: 3px solid #4cae4c; }
+        #barracks-btn:hover:not(:disabled) { background-color: #4cae4c; border-bottom-color: #398439; }
+        #tax-btn { background-color: #f0ad4e; border-bottom: 3px solid #eea236; }
+        #tax-btn:hover:not(:disabled) { background-color: #eea236; border-bottom-color: #d58512; }
+
+        #game-management-controls, #turn-controls { display: flex; justify-content: center; gap: 15px; align-items: center; margin-bottom: 15px; padding: 10px; background-color: #e3e9ef; border-radius: 6px; }
+        #game-management-controls button, #turn-controls button { padding: 10px 20px; font-size: 1em; color: white; border: none; border-radius: 5px; cursor: pointer; transition: background-color 0.2s, transform 0.1s; }
+        #save-game-btn { background-color: #337ab7; border-bottom: 3px solid #286090; }
+        #save-game-btn:hover { background-color: #286090; border-bottom-color: #1f4c73; transform: translateY(-1px); }
+        #new-game-btn { background-color: #f0ad4e; border-bottom: 3px solid #eea236; }
+        #new-game-btn:hover { background-color: #eea236; border-bottom-color: #d58512; transform: translateY(-1px); }
+        #show-tutorial-btn { background-color: #6c757d; border-bottom: 3px solid #5a6268;}
+        #show-tutorial-btn:hover { background-color: #5a6268; border-bottom-color: #495057; transform: translateY(-1px); }
+        #next-turn-btn { background-color: #5bc0de; border-bottom: 3px solid #46b8da; font-size: 1.1em !important; padding: 12px 28px !important;}
+        #next-turn-btn:hover { background-color: #46b8da; border-bottom-color: #31b0d5; transform: translateY(-1px); }
+        #turn-display { font-size: 1.2em; font-weight: bold; color: #2c3e50; }
+        #messages-container { border: 1px solid #ccd1d9; padding: 10px; background-color: #f7f9fc; margin-top: 15px; border-radius: 6px; }
+        #messages-container h4 { margin-top:0; color: #333; border-bottom: 1px solid #e7eaf0; padding-bottom: 5px;}
+        #messages { min-height: 40px; overflow-y: auto; max-height: 100px; background-color: #fff; padding: 8px; border-radius: 4px; border: 1px solid #dde2e7; }
+        .message-item { padding: 4px 0; border-bottom: 1px dashed #e7eaf0; font-size: 0.9em; color: #555; }
+        .message-item:last-child { border-bottom: none; }
+        .rebellion { color: #c9302c !important; font-weight: bold; }
+        .battle_win { color: #4cae4c !important; font-weight: bold; }
+        .battle_lose { color: #d9534f !important; font-weight: bold; }
+        .success { color: #3c763d !important; }
+        .error { color: #a94442 !important; }
+        .info { color: #31708f !important; }
+
+        /* Modal Styles */
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.65); padding-top: 50px; }
+        .modal-content { background-color: #fefefe; margin: 3% auto; padding: 20px; border: 1px solid #bbb; width: 88%; max-width: 520px; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.25); position: relative; }
+        .modal-content.modal-lg { max-width: 800px; }
+        .modal-content h3, .modal-content h4 { margin-top: 0; color: #2c3e50; border-bottom: 1px solid #e0e0e0; padding-bottom:8px; margin-bottom:15px;}
+        .modal-content label { display: block; margin: 10px 0 5px; font-weight: 600; color: #444;}
+        .modal-content input[type="number"], .modal-content input[type="range"] { width: 96%; padding: 0; margin-bottom: 10px; }
+        .modal-buttons { margin-top: 20px; text-align: right; }
+        .modal-buttons button { padding: 10px 20px; margin-left: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; border: none; transition: background-color 0.2s, transform 0.1s; }
+        .close-btn { background-color: #f0ad4e; color: white; border-bottom: 2px solid #eea236;}
+        .close-btn:hover { background-color: #eea236; transform: translateY(-1px); }
+        .action-btn { background-color: #5cb85c; color: white; border-bottom: 2px solid #4cae4c; }
+        .action-btn:hover { background-color: #4cae4c; transform: translateY(-1px); }
+        #tutorial-modal-content { border-left: 5px solid #5bc0de; }
+        #tutorial-modal-content h3 { color: #31708f; }
+        #tutorial-text { font-size: 1.05em; line-height: 1.7; margin-bottom: 25px; color: #333; }
+        #tutorial-modal .action-btn, #tutorial-modal .close-btn { padding: 10px 22px; }
+        #prev-tutorial-btn, #prev-combat-tutorial-btn { background-color: #777; border-bottom-color: #555; }
+        #prev-tutorial-btn:hover, #prev-combat-tutorial-btn:hover { background-color: #666; }
+
+        .highlight-tutorial-element { box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.8) !important; border-radius: 6px; transition: box-shadow 0.4s ease-in-out; position: relative; }
+
+        /* BATTLE MODAL STYLES */
+        #battle-grid, #defense-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
+        .battle-tile { background-color: #f0f4f8; border: 1px solid #cdd5df; border-radius: 5px; padding: 10px; }
+        .battle-tile h5 { margin: 0 0 8px 0; text-align: center; border-bottom: 1px solid #e1e8f0; padding-bottom: 5px; }
+        .slider-container { display: flex; align-items: center; margin: 4px 0; }
+        .slider-container label { flex-basis: 80px; font-size: 0.9em; }
+        .slider-container input[type="range"] { flex-grow: 1; margin: 0 10px; }
+        .tile-power { text-align: center; font-size: 0.8em; margin-top: 5px; font-weight: bold; }
+        #available-army-display p, #garrison-army-display p { margin: 2px 0; font-weight: bold; }
+        #available-army-display span, #garrison-army-display span { margin: 0 5px; }
+
+    </style>
+</head>
+<body>
+
+    <div id="start-menu">
+        <h1>Taht Savaşları</h1>
+        <input type="text" id="kingdom-name-input" placeholder="Krallığınızın Adını Girin..." value="Benim Krallığım">
+        <button id="play-button">Oyuna Başla</button>
+    </div>
+
+    <div id="game-window">
+        <div id="map-container">
+            <div class="map-region" id="RIVAL_K3"><span class="region-name">Batı Baronluğu</span><span class="region-owner"></span></div>
+            <div class="map-region" id="NEUTRAL_1"><span class="region-name">Terkedilmiş Tarım Arazileri</span><span class="region-owner"></span></div>
+            <div class="map-region" id="RIVAL_K1_A"><span class="region-name">K.M. (Batı)</span><span class="region-owner"></span></div>
+            <div class="map-region" id="RIVAL_K1_B"><span class="region-name">K.M. (Doğu)</span><span class="region-owner"></span></div>
+            <div class="map-region" id="RIVAL_K2"><span class="region-name">Doğu Beyliği</span><span class="region-owner"></span></div>
+            <div class="map-region" id="OYUNCU_BOLGE_B"><span class="region-name">Güney Kalesi</span><span class="region-owner"></span></div>
+            <div class="map-region" id="OYUNCU_BOLGE_A"><span class="region-name">Başkent</span><span class="region-owner"></span></div>
+            <div class="map-region" id="OYUNCU_BOLGE_C"><span class="region-name">Doğu Gözcü Kulesi</span><span class="region-owner"></span></div>
+            <div class="map-region mountain-area" id="MOUNTAIN_1"><span class="region-name">Ejderha Sırtı Dağları</span></div>
+            <div class="map-region" id="NEUTRAL_2"><span class="region-name">Eski Harabeler</span><span class="region-owner"></span></div>
+            <div class="map-region" id="RIVAL_K1_C"><span class="region-name">K.M. (Güney)</span><span class="region-owner"></span></div>
+            <div class="map-region" id="RIVAL_K5_A"><span class="region-name">Sessiz Kıyı</span><span class="region-owner"></span></div>
+            <div class="map-region water-area" id="LAKE_1"><span class="region-name">Büyük Göl</span></div>
+            <div class="map-region" id="NEUTRAL_3"><span class="region-name">Ticaret Yolu</span><span class="region-owner"></span></div>
+            <div class="map-region" id="YENI_RAKIP_BOLGE_C"><span class="region-name">Güney Karakolu</span><span class="region-owner"></span></div>
+            <div class="map-region" id="RIVAL_K4"><span class="region-name">Dağ Kabileleri</span><span class="region-owner"></span></div>
+            <div class="map-region" id="NEUTRAL_4"><span class="region-name">Sisli Vadi</span><span class="region-owner"></span></div>
+            <div class="map-region water-area" id="LAKE_2"><span class="region-name">Huzur Nehri</span></div>
+            <div class="map-region" id="NEUTRAL_5"><span class="region-name">Issız Topraklar</span><span class="region-owner"></span></div>
+            <div class="map-region" id="YENI_RAKIP_BOLGE_B"><span class="region-name">Demir Kale</span><span class="region-owner"></span></div>
+        </div>
+        <div id="info-and-controls">
+            <div id="kingdom-name-display">Krallık Bilgileri</div>
+            <div class="info-section" id="army-stats">
+                <h4>⚔️ Ordu</h4>
+                <p>🚶 Piyade: <span id="infantry-count">0</span></p>
+                <p>🏹 Okçu: <span id="archer-count">0</span></p>
+                <p>🐎 Atlı: <span id="cavalry-count">0</span></p>
+            </div>
+            <div class="info-section" id="treasury-stats">
+                <h4>💰 Hazine</h4>
+                <p>🪙 Altın: <span id="gold-amount">0</span></p>
+                <p>📈 Gelir (Tahmini): <span id="income-estimate">0</span></p>
+                <p>📉 Gider (Tahmini): <span id="upkeep-estimate">0</span></p>
+            </div>
+            <div class="info-section" id="population-stats">
+                <h4>👨‍👩‍👧‍👦 Nüfus</h4>
+                <p>Toplam: <span id="total-population">0</span></p>
+                <p>Askere Hazır: <span id="recruitable-population">0</span></p>
+                <p>😊 Mutluluk: <span id="happiness-level">0</span>%</p>
+                <p>Vergi Oranı: <span id="tax-rate-display">0</span>%</p>
+            </div>
+        </div>
+        <div id="main-controls">
+            <button id="barracks-btn">Karargâh</button>
+            <button id="tax-btn">Vergi ve Maliyet</button>
+            <button id="attack-btn">Savaş Aç</button>
+        </div>
+        <div id="game-management-controls">
+            <button id="save-game-btn">Oyunu Kaydet</button>
+            <button id="new-game-btn">Yeni Oyun</button>
+            <button id="show-tutorial-btn">Rehberi Göster</button>
+        </div>
+        <div id="turn-controls">
+            <div id="turn-display">Tur: 1</div>
+            <button id="next-turn-btn">Turu Bitir</button>
+        </div>
+        <div id="messages-container">
+          <h4>Olaylar ve Mesajlar:</h4>
+          <div id="messages">Henüz bir olay yok.</div>
+        </div>
+    </div>
+
+    <div id="barracks-modal" class="modal">
+        <div class="modal-content">
+            <h3>Karargâh - Asker Alımı</h3>
+            <p>Askere Hazır Nüfus: <span id="modal-recruitable-pop">0</span></p>
+            <p>Mevcut Altın: <span id="modal-current-gold">0</span></p>
+            <div id="recruit-sliders">
+                <div class="slider-container">
+                    <label for="recruit-infantry-slider">🚶 Piyade: <span id="recruit-infantry-value">0</span></label>
+                    <input type="range" id="recruit-infantry-slider" value="0" min="0" step="1">
+                </div>
+                <div class="slider-container">
+                    <label for="recruit-archer-slider">🏹 Okçu: <span id="recruit-archer-value">0</span></label>
+                    <input type="range" id="recruit-archer-slider" value="0" min="0" step="1">
+                </div>
+                <div class="slider-container">
+                    <label for="recruit-cavalry-slider">🐎 Atlı: <span id="recruit-cavalry-value">0</span></label>
+                    <input type="range" id="recruit-cavalry-slider" value="0" min="0" step="1">
+                </div>
+            </div>
+            <p>Toplam Maliyet: <span id="total-recruit-cost">0</span> Altın</p>
+            <p>Kullanılacak Nüfus: <span id="total-recruit-pop">0</span></p>
+            <div class="modal-buttons">
+                <button class="close-btn" id="close-barracks-btn">Kapat</button>
+                <button class="action-btn" id="confirm-recruit-btn">Asker Al</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="tax-modal" class="modal">
+        <div class="modal-content">
+            <h3>Vergi ve Maliyet</h3>
+            <div class="slider-container">
+                <label for="tax-rate-slider">💸 Vergi Oranı (%): <span id="tax-rate-value">10</span></label>
+                <input type="range" id="tax-rate-slider" min="0" max="50" value="10">
+            </div>
+            <p>Tahmini Günlük Gelir: <span id="modal-income">0</span> Altın</p>
+            <p>Tahmini Günlük Asker Gideri: <span id="modal-upkeep">0</span> Altın</p>
+            <p>İsyan Riski: <span id="rebellion-risk">Düşük</span></p>
+            <div class="modal-buttons">
+                <button class="close-btn" id="close-tax-btn">Kapat</button>
+                <button class="action-btn" id="confirm-tax-btn">Onayla</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="game-over-modal" class="modal">
+        <div class="modal-content" style="text-align: center;">
+            <h3 style="color: #d9534f;">Krallığınız Yıkıldı!</h3>
+            <p>Maalesef taht savaşını kaybettiniz. Ama her son yeni bir başlangıçtır.</p>
+            <div class="modal-buttons" style="justify-content: center; display: flex;">
+                <button class="action-btn" id="game-over-new-game-btn" style="background-color: #5cb85c;">Yeni Oyun Başlat</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="tutorial-choice-modal" class="modal">
+        <div class="modal-content">
+            <h3>Rehber Seçimi</h3>
+            <p>Hangi konuda yardım almak istersiniz?</p>
+            <div class="modal-buttons" style="display:flex; justify-content: space-around;">
+                 <button class="action-btn" id="start-main-tutorial-btn">Genel Oyun Rehberi</button>
+                 <button class="action-btn" id="start-combat-tutorial-btn" style="background-color:#337ab7">Savaş Sistemi Rehberi</button>
+                 <button class="close-btn" id="close-tutorial-choice-btn">Kapat</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="tutorial-modal" class="modal">
+        <div class="modal-content" id="tutorial-modal-content">
+            <h3 id="tutorial-title">Oyuna Hoş Geldin!</h3>
+            <p id="tutorial-text">Bu rehber sana oyunun temellerini öğretecek.</p>
+            <div class="modal-buttons">
+                <button class="action-btn" id="prev-tutorial-btn" style="display:none;">Geri</button>
+                <button class="action-btn" id="next-tutorial-btn">İleri</button>
+                <button class="close-btn" id="end-tutorial-btn" style="display:none;">Rehberi Kapat</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="combat-tutorial-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="combat-tutorial-title">Savaş Sistemi</h3>
+            <p id="combat-tutorial-text">Savaşın kurallarını öğren.</p>
+            <div class="modal-buttons">
+                <button class="action-btn" id="prev-combat-tutorial-btn" style="display:none;">Geri</button>
+                <button class="action-btn" id="next-combat-tutorial-btn">İleri</button>
+                <button class="close-btn" id="end-combat-tutorial-btn" style="display:none;">Rehberi Kapat</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="battle-modal" class="modal">
+        <div class="modal-content modal-lg">
+            <h3 id="battle-modal-title">Savaş Planı</h3>
+            <div id="available-army-display">
+                <p>Kullanılabilir Ordu:</p>
+                <span>🚶<span id="available-infantry">0</span></span>
+                <span>🏹<span id="available-archer">0</span></span>
+                <span>🐎<span id="available-cavalry">0</span></span>
+            </div>
+            <hr>
+            <div id="battle-grid"></div>
+            <div class="modal-buttons">
+                <button class="close-btn" id="close-battle-modal-btn">Geri Çekil</button>
+                <button class="action-btn" id="confirm-battle-plan-btn" style="background-color: #d9534f;">Saldırıyı Başlat!</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="defense-modal" class="modal">
+        <div class="modal-content modal-lg">
+            <h3 id="defense-modal-title">Savunma Planı</h3>
+            <p>Krallığınız saldırı altında! Askerlerinizi 4 bölgeye dağıtarak şehrinizi savunun.</p>
+            <div id="garrison-army-display">
+                 <p>Savunma Ordusu:</p>
+                <span>🚶<span id="garrison-infantry">0</span></span>
+                <span>🏹<span id="garrison-archer">0</span></span>
+                <span>🐎<span id="garrison-cavalry">0</span></span>
+            </div>
+            <hr>
+            <div id="defense-grid"></div>
+            <div class="modal-buttons">
+                <button class="action-btn" id="confirm-defense-plan-btn">Savunmayı Başlat!</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- BAŞLANGIÇ VE TEMEL OYUN DEĞİŞKENLERİ ---
+        const PLAYER_KINGDOM_ID = "OYUNCU_KRALLIGI";
+        const NEW_POWERFUL_RIVAL_ID = "DEMIR_YUMRUK_IMPARATORLUGU";
+        let KINGDOM_DETAILS = {
+            [PLAYER_KINGDOM_ID]: { name: "Benim Krallığım", color: "#42a5f5", isPlayer: true, aiControlled: false },
+            [NEW_POWERFUL_RIVAL_ID]: { name: "Demir Yumruk İmparatorluğu", color: "#616161", aiControlled: true },
+            RIVAL_K1: { name: "Kuzey Muhafızları", color: "#ef5350", aiControlled: true },
+            RIVAL_K2: { name: "Doğu Beyliği", color: "#ffca28", aiControlled: true },
+            RIVAL_K3: { name: "Batı Baronluğu", color: "#66bb6a", aiControlled: true },
+            RIVAL_K4: { name: "Dağ Kabileleri", color: "#ab47bc", aiControlled: true },
+            RIVAL_K5: { name: "Göl Kenarı Lordları", color: "#00bcd4", aiControlled: true },
+        };
+        const UNIT_STATS = {
+            infantry: { price: 10, upkeep: 1, name: "Piyade", power: 1.0 },
+            archer: { price: 15, upkeep: 2, name: "Okçu", power: 1.25 },
+            cavalry: { price: 30, upkeep: 3, name: "Atlı", power: 1.5 }
+        };
+
+        const REGION_ADJACENCY = {
+            "RIVAL_K3": ["NEUTRAL_1", "OYUNCU_BOLGE_B"],
+            "NEUTRAL_1": ["RIVAL_K3", "RIVAL_K1_A", "OYUNCU_BOLGE_A", "OYUNCU_BOLGE_B"],
+            "RIVAL_K1_A": ["NEUTRAL_1", "RIVAL_K1_B", "OYUNCU_BOLGE_A", "MOUNTAIN_1"],
+            "RIVAL_K1_B": ["RIVAL_K1_A", "RIVAL_K2", "MOUNTAIN_1"],
+            "RIVAL_K2": ["RIVAL_K1_B", "NEUTRAL_2"],
+            "OYUNCU_BOLGE_B": ["RIVAL_K3", "NEUTRAL_1", "OYUNCU_BOLGE_A", "RIVAL_K1_C"],
+            "OYUNCU_BOLGE_A": ["OYUNCU_BOLGE_B", "NEUTRAL_1", "RIVAL_K1_A", "OYUNCU_BOLGE_C"],
+            "OYUNCU_BOLGE_C": ["OYUNCU_BOLGE_A", "MOUNTAIN_1", "LAKE_1", "RIVAL_K5_A"],
+            "MOUNTAIN_1": ["RIVAL_K1_A", "RIVAL_K1_B", "OYUNCU_BOLGE_C", "NEUTRAL_2", "LAKE_1", "NEUTRAL_3"],
+            "NEUTRAL_2": ["RIVAL_K2", "MOUNTAIN_1", "YENI_RAKIP_BOLGE_C", "NEUTRAL_3"],
+            "RIVAL_K1_C": ["OYUNCU_BOLGE_B", "RIVAL_K5_A", "RIVAL_K4"],
+            "RIVAL_K5_A": ["RIVAL_K1_C", "OYUNCU_BOLGE_C", "LAKE_1", "NEUTRAL_4"],
+            "LAKE_1": ["OYUNCU_BOLGE_C", "MOUNTAIN_1", "RIVAL_K5_A", "NEUTRAL_3"],
+            "NEUTRAL_3": ["MOUNTAIN_1", "NEUTRAL_2", "LAKE_1", "LAKE_2", "YENI_RAKIP_BOLGE_C"],
+            "YENI_RAKIP_BOLGE_C": ["NEUTRAL_2", "NEUTRAL_3", "YENI_RAKIP_BOLGE_B"],
+            "RIVAL_K4": ["RIVAL_K1_C", "NEUTRAL_4"],
+            "NEUTRAL_4": ["RIVAL_K4", "RIVAL_K5_A", "LAKE_2", "NEUTRAL_5"],
+            "LAKE_2": ["NEUTRAL_3", "NEUTRAL_4", "YENI_RAKIP_BOLGE_B", "NEUTRAL_5"],
+            "NEUTRAL_5": ["NEUTRAL_4", "LAKE_2", "YENI_RAKIP_BOLGE_B"],
+            "YENI_RAKIP_BOLGE_B": ["YENI_RAKIP_BOLGE_C", "LAKE_2", "NEUTRAL_5"]
+        };
+
+        let gameState = {};
+        
+        // --- REHBER SİSTEMİ ---
+        const tutorialModal = document.getElementById('tutorial-modal');
+        const tutorialTextEl = document.getElementById('tutorial-text');
+        const tutorialTitleEl = document.getElementById('tutorial-title');
+        const nextTutorialBtn = document.getElementById('next-tutorial-btn');
+        const prevTutorialBtn = document.getElementById('prev-tutorial-btn');
+        const endTutorialBtn = document.getElementById('end-tutorial-btn');
+        let currentTutorialStepIdx = 0;
+        
+        const combatTutorialModal = document.getElementById('combat-tutorial-modal');
+        const combatTutorialTextEl = document.getElementById('combat-tutorial-text');
+        const combatTutorialTitleEl = document.getElementById('combat-tutorial-title');
+        const nextCombatTutorialBtn = document.getElementById('next-combat-tutorial-btn');
+        const prevCombatTutorialBtn = document.getElementById('prev-combat-tutorial-btn');
+        const endCombatTutorialBtn = document.getElementById('end-combat-tutorial-btn');
+        let currentCombatTutorialStepIdx = 0;
+        
+        const tutorialChoiceModal = document.getElementById('tutorial-choice-modal');
+        document.getElementById('show-tutorial-btn').addEventListener('click', () => tutorialChoiceModal.style.display = 'block');
+        document.getElementById('close-tutorial-choice-btn').addEventListener('click', () => tutorialChoiceModal.style.display = 'none');
+        document.getElementById('start-main-tutorial-btn').addEventListener('click', () => {
+            tutorialChoiceModal.style.display = 'none';
+            startTutorial();
+        });
+        document.getElementById('start-combat-tutorial-btn').addEventListener('click', () => {
+            tutorialChoiceModal.style.display = 'none';
+            startCombatTutorial();
+        });
+
+        const tutorialSteps = [
+            { title: "Oyuna Hoş Geldin!", text: "Taht Savaşları'na hoş geldin! Bu rehber sana oyunun temellerini öğretecek." },
+            { elementId: 'map-container', title: "Harita", text: "Burası oyun haritası. Krallıklar ve bölgeler burada yer alır." },
+            { elementId: 'OYUNCU_BOLGE_A', title: "Başkentin", text: "Bu senin başlangıç bölgen ve başkentin. Başkenti kaybetmek oyunu kaybetmek demektir!" },
+            { elementId: 'info-and-controls', title: "Krallık Paneli", text: "Bu panelde krallığının Ordu, Hazine ve Nüfus bilgilerini görebilirsin." },
+            { elementId: 'barracks-btn', title: "Karargâh", text: "Karargâh butonu ile yeni askerler alabilirsin." },
+            { elementId: 'tax-btn', title: "Vergi ve Maliyet", text: "Vergi butonu ile vergi oranını ayarlayabilirsin. Yüksek vergi geliri artırır ama mutluluğu düşürür." },
+            { elementId: 'attack-btn', title: "Savaş Aç", text: "Sınır komşun olan bir düşman bölgesine tıklayıp bu buton ile savaş ilan edebilirsin." },
+            { elementId: 'next-turn-btn', title: "Turu Bitir", text: "Turu Bitir butonu ile zamanı ilerletirsin. Gelirler toplanır, giderler ödenir ve olaylar gerçekleşir." },
+            { elementId: 'messages-container', title: "Olaylar ve Mesajlar", text: "Oyun içi önemli gelişmeler burada bildirilir. Rastgele olaylar, savaş sonuçları ve ekonomik durumun hakkında bilgi alırsın." },
+            { title: "Rehber Sonu", text: "Rehber tamamlandı! Daha detaylı savaş mekanikleri için Savaş Sistemi Rehberi'ne göz at. Bol şans!" }
+        ];
+        
+        const combatTutorialSteps = [
+            { title: "Savaş Sistemi", text: "Savaşlar, bir bölgenin 4 alt karesini temsil eden 2x2'lik bir alanda gerçekleşir." },
+            { title: "Savaş İlanı", text: "Komşu bir düşman bölgesine tıkladıktan sonra 'Savaş Aç' butonuna basarsın. Ordunu 4 kareye dağıtacağın Savaş Planı ekranı açılır." },
+            { title: "Birim Güçleri", text: "Her birimin bir güç puanı vardır: Piyade (1), Okçu (1.25), Atlı (1.5). Bir karedeki toplam güç, o karenin sonucunu belirler." },
+            { title: "Zafer Koşulu", text: "Bir bölgeyi ele geçirmek için 4 kareden en az 3'ünü kazanman gerekir. Aksi takdirde saldırın püskürtülür ve ordun ağır kayıp verir." },
+            { title: "Savunma", text: "Eğer sana saldırılırsa, bu sefer sen savunma yapan tarafsın. Saldırıya uğrayan bölgedeki ordunu 4 kareye dağıtarak düşmanı durdurmaya çalışırsın." },
+            { title: "Savunma Zaferi", text: "Savunmadayken en az 2 kareyi korumayı başarırsan (yani rakip 3 kare alamazsa), saldırıyı püskürtmüş olursun." }
+        ];
+
+        function startTutorial() { currentTutorialStepIdx = 0; showTutorialStep(tutorialSteps, tutorialModal, tutorialTitleEl, tutorialTextEl, nextTutorialBtn, prevTutorialBtn, endTutorialBtn); }
+        function startCombatTutorial() { currentCombatTutorialStepIdx = 0; showTutorialStep(combatTutorialSteps, combatTutorialModal, combatTutorialTitleEl, combatTutorialTextEl, nextCombatTutorialBtn, prevCombatTutorialBtn, endCombatTutorialBtn); }
+        function showTutorialStep(steps, modal, titleEl, textEl, nextBtn, prevBtn, endBtn) {
+            const currentIdx = modal === tutorialModal ? currentTutorialStepIdx : currentCombatTutorialStepIdx;
+            if (currentIdx < 0 || currentIdx >= steps.length) return;
+            const step = steps[currentIdx];
+            titleEl.textContent = step.title; textEl.textContent = step.text;
+            modal.style.display = 'block';
+            prevBtn.style.display = currentIdx > 0 ? 'inline-block' : 'none';
+            endBtn.style.display = currentIdx === steps.length - 1 ? 'inline-block' : 'none';
+            nextBtn.style.display = currentIdx < steps.length - 1 ? 'inline-block' : 'none';
+        }
+        [nextTutorialBtn, nextCombatTutorialBtn].forEach(btn => { btn.addEventListener('click', () => { const modal = btn.closest('.modal'); if (modal.id === 'tutorial-modal') { if (currentTutorialStepIdx < tutorialSteps.length - 1) { currentTutorialStepIdx++; showTutorialStep(tutorialSteps, tutorialModal, tutorialTitleEl, tutorialTextEl, nextTutorialBtn, prevTutorialBtn, endTutorialBtn); } } else { if (currentCombatTutorialStepIdx < combatTutorialSteps.length - 1) { currentCombatTutorialStepIdx++; showTutorialStep(combatTutorialSteps, combatTutorialModal, combatTutorialTitleEl, combatTutorialTextEl, nextCombatTutorialBtn, prevCombatTutorialBtn, endCombatTutorialBtn); } } }); });
+        [prevTutorialBtn, prevCombatTutorialBtn].forEach(btn => { btn.addEventListener('click', () => { const modal = btn.closest('.modal'); if (modal.id === 'tutorial-modal') { if (currentTutorialStepIdx > 0) { currentTutorialStepIdx--; showTutorialStep(tutorialSteps, tutorialModal, tutorialTitleEl, tutorialTextEl, nextTutorialBtn, prevTutorialBtn, endTutorialBtn); } } else { if (currentCombatTutorialStepIdx > 0) { currentCombatTutorialStepIdx--; showTutorialStep(combatTutorialSteps, combatTutorialModal, combatTutorialTitleEl, combatTutorialTextEl, nextCombatTutorialBtn, prevCombatTutorialBtn, endCombatTutorialBtn); } } }); });
+        [endTutorialBtn, endCombatTutorialBtn].forEach(btn => btn.addEventListener('click', () => btn.closest('.modal').style.display = 'none'));
+
+
+        // --- OYUN KURULUMU VE YÖNETİMİ ---
+        function createNewGameState(playerName) {
+            KINGDOM_DETAILS[PLAYER_KINGDOM_ID].name = playerName;
+            const newGameState = {
+                turn: 1, upkeepModifier: 1.0, selectedRegionId: "OYUNCU_BOLGE_A", playerKingdomId: PLAYER_KINGDOM_ID,
+                kingdoms: {}, regions: {}, messages: [], playerAttackedThisTurn: false, activeBattle: null,
+            };
+            const regionElementsData = { "OYUNCU_BOLGE_A": { owner: PLAYER_KINGDOM_ID, name: "Başkent", isCapital: true, population: 15000, recruitablePopBase: 1500 }, "OYUNCU_BOLGE_B": { owner: PLAYER_KINGDOM_ID, name: "Güney Kalesi", population: 6000, recruitablePopBase: 500 }, "OYUNCU_BOLGE_C": { owner: PLAYER_KINGDOM_ID, name: "Doğu Gözcü Kulesi", population: 5500, recruitablePopBase: 450 }, "YENI_RAKIP_BOLGE_B": { owner: NEW_POWERFUL_RIVAL_ID, name: "Demir Kale", isCapital: true, population: 40000, recruitablePopBase: 4000 }, "YENI_RAKIP_BOLGE_C": { owner: NEW_POWERFUL_RIVAL_ID, name: "Güney Karakolu", population: 20000, recruitablePopBase: 1500 }, "RIVAL_K1_A": { owner: "RIVAL_K1", name: "K.M. (Batı)", isCapital: true, population: 12000, recruitablePopBase: 1000 }, "RIVAL_K1_B": { owner: "RIVAL_K1", name: "K.M. (Doğu)", population: 8000, recruitablePopBase: 700 }, "RIVAL_K1_C": { owner: "RIVAL_K1", name: "K.M. (Güney)", population: 7000, recruitablePopBase: 600 }, "RIVAL_K2": { owner: "RIVAL_K2", name: "Doğu Beyliği", isCapital: true, population: 13000, recruitablePopBase: 1100 }, "RIVAL_K3": { owner: "RIVAL_K3", name: "Batı Baronluğu", isCapital: true, population: 14000, recruitablePopBase: 1200 }, "RIVAL_K4": { owner: "RIVAL_K4", name: "Dağ Kabileleri", isCapital: true, population: 10000, recruitablePopBase: 800 }, "RIVAL_K5_A": { owner: "RIVAL_K5", name: "Sessiz Kıyı", isCapital: true, population: 9000, recruitablePopBase: 900 }, "NEUTRAL_1": { owner: null, name: "Terkedilmiş Tarım Arazileri", population: 2000, recruitablePopBase: 200 }, "NEUTRAL_2": { owner: null, name: "Eski Harabeler", population: 1500, recruitablePopBase: 100 }, "NEUTRAL_3": { owner: null, name: "Ticaret Yolu", population: 3000, recruitablePopBase: 250 }, "NEUTRAL_4": { owner: null, name: "Sisli Vadi", population: 1800, recruitablePopBase: 150 }, "NEUTRAL_5": { owner: null, name: "Issız Topraklar", population: 1200, recruitablePopBase: 50 }, "LAKE_1": { owner: null, name: "Büyük Göl", terrain: 'water', conquerable: false, population: 0 }, "LAKE_2": { owner: null, name: "Huzur Nehri", terrain: 'water', conquerable: false, population: 0 }, "MOUNTAIN_1": { owner: null, name: "Ejderha Sırtı Dağları", terrain: 'mountain', conquerable: false, population: 0 }};
+            for (const regionId in regionElementsData) { const data = regionElementsData[regionId]; newGameState.regions[regionId] = { id: regionId, owner: data.owner, name: data.name, isKingdomCapital: !!data.isCapital, terrain: data.terrain || 'plains', conquerable: data.conquerable !== false, infantry: 0, archer: 0, cavalry: 0, population: data.population || 5000, rebellion: null }; }
+            for (const kingdomId in KINGDOM_DETAILS) {
+                const details = KINGDOM_DETAILS[kingdomId];
+                let capitalRegionId = null, totalPopulation = 0, totalRecruitableBase = 0;
+                for(const regionId in newGameState.regions){ if(newGameState.regions[regionId].owner === kingdomId){ totalPopulation += newGameState.regions[regionId].population; totalRecruitableBase += regionElementsData[regionId]?.recruitablePopBase || (newGameState.regions[regionId].population * 0.1); if(newGameState.regions[regionId].isKingdomCapital) capitalRegionId = regionId; } }
+                if(!capitalRegionId) capitalRegionId = Object.keys(newGameState.regions).find(rId => newGameState.regions[rId].owner === kingdomId);
+                newGameState.kingdoms[kingdomId] = { id: kingdomId, name: details.name, isPlayer: !!details.isPlayer, aiControlled: details.aiControlled, gold: details.isPlayer ? 5000 : 1800, population: totalPopulation, recruitablePop: Math.floor(totalRecruitableBase), army: { infantry: details.isPlayer ? 120 : 100, archer: details.isPlayer ? 30 : 50, cavalry: details.isPlayer ? 15 : 20, }, taxRate: 10, happiness: 70, mainRegionId: capitalRegionId, lastExpansionTurn: 1 };
+            }
+            newGameState.selectedRegionId = newGameState.kingdoms[PLAYER_KINGDOM_ID].mainRegionId;
+            return newGameState;
+        }
+        function initializeOrLoadGame() {
+            const savedGame = localStorage.getItem('tahtSavaslariGameSave');
+            if (savedGame) {
+                try {
+                    gameState = JSON.parse(savedGame);
+                    if (!gameState.turn || !gameState.kingdoms || !gameState.regions) throw new Error("Eksik veri.");
+                    KINGDOM_DETAILS[PLAYER_KINGDOM_ID].name = gameState.kingdoms[PLAYER_KINGDOM_ID].name;
+                    addMessage("Kaydedilmiş oyun başarıyla yüklendi!", "success");
+                    document.getElementById('start-menu').style.display = 'none';
+                    document.getElementById('game-window').style.display = 'block';
+                    document.body.style.backgroundColor = '#e9ebee';
+                    updateUI();
+                    renderMessages();
+                } catch (e) {
+                    localStorage.removeItem('tahtSavaslariGameSave');
+                }
+            }
+        }
+        function saveGame() {
+            try {
+                localStorage.setItem('tahtSavaslariGameSave', JSON.stringify(gameState));
+                addMessage("Oyun başarıyla kaydedildi!", "success");
+            } catch (e) { addMessage("Oyun kaydedilemedi.", "error"); }
+        }
+        function startNewGame() {
+            if (confirm("Emin misiniz? Mevcut ilerlemeniz silinecek ve başlangıç ekranına döneceksiniz.")) {
+                localStorage.removeItem('tahtSavaslariGameSave');
+                localStorage.removeItem('tahtSavaslariTutorialCompleted');
+                document.getElementById('game-window').style.display = 'none';
+                document.getElementById('start-menu').style.display = 'flex';
+                document.body.style.backgroundColor = '#1a1a1a';
+            }
+        }
+        document.getElementById('save-game-btn').addEventListener('click', saveGame);
+        document.getElementById('new-game-btn').addEventListener('click', startNewGame);
+        document.getElementById('game-over-new-game-btn').addEventListener('click', () => {
+            document.getElementById('game-over-modal').style.display = 'none';
+            document.getElementById('game-window').style.display = 'none';
+            document.getElementById('start-menu').style.display = 'flex';
+            document.body.style.backgroundColor = '#1a1a1a';
+        });
+        document.getElementById('play-button').addEventListener('click', () => {
+            let kingdomName = document.getElementById('kingdom-name-input').value.trim();
+            if (!kingdomName) kingdomName = "Benim Krallığım";
+
+            localStorage.removeItem('tahtSavaslariGameSave');
+            localStorage.removeItem('tahtSavaslariTutorialCompleted');
+            gameState = createNewGameState(kingdomName);
+            addMessage("Yeni oyun başlatıldı.", "info");
+
+            document.getElementById('start-menu').style.display = 'none';
+            document.getElementById('game-window').style.display = 'block';
+            document.body.style.backgroundColor = '#e9ebee';
+            document.getElementById('next-turn-btn').disabled = false;
+            updateUI();
+        });
+
+        // --- UI & DISPLAY ---
+        function addMessage(text, type = "normal") { gameState.messages.unshift({ text, type, turn: gameState.turn }); if (gameState.messages.length > 20) gameState.messages.pop(); renderMessages(); }
+        function renderMessages() { const messagesEl = document.getElementById('messages'); messagesEl.innerHTML = ''; if (!gameState.messages || gameState.messages.length === 0) { messagesEl.innerHTML = '<div>Henüz bir olay yok.</div>'; return; } gameState.messages.forEach(msg => { const msgEl = document.createElement('div'); msgEl.classList.add('message-item'); if (msg.type) msgEl.classList.add(msg.type); msgEl.textContent = `Tur ${msg.turn}: ${msg.text}`; messagesEl.appendChild(msgEl); }); }
+        function updateUI() {
+            if (!gameState || !gameState.kingdoms || !gameState.playerKingdomId) return;
+            const playerKingdom = gameState.kingdoms[gameState.playerKingdomId];
+            if (!playerKingdom) { return; }
+            document.querySelectorAll('.map-region.selected-region').forEach(el => el.classList.remove('selected-region'));
+            if (gameState.selectedRegionId) document.getElementById(gameState.selectedRegionId)?.classList.add('selected-region');
+            const selectedRegion = gameState.regions[gameState.selectedRegionId] || {};
+            const ownerKingdom = gameState.kingdoms[selectedRegion.owner] || {};
+            document.getElementById('kingdom-name-display').textContent = selectedRegion.name ? `${selectedRegion.name} (${ownerKingdom.name || 'Sahipsiz'})` : playerKingdom.name;
+            document.getElementById('infantry-count').textContent = playerKingdom.army.infantry;
+            document.getElementById('archer-count').textContent = playerKingdom.army.archer;
+            document.getElementById('cavalry-count').textContent = playerKingdom.army.cavalry;
+            document.getElementById('gold-amount').textContent = playerKingdom.gold;
+            document.getElementById('total-population').textContent = playerKingdom.population;
+            document.getElementById('recruitable-population').textContent = playerKingdom.recruitablePop;
+            document.getElementById('happiness-level').textContent = playerKingdom.happiness;
+            document.getElementById('tax-rate-display').textContent = playerKingdom.taxRate;
+            document.getElementById('income-estimate').textContent = calculateIncome(playerKingdom);
+            document.getElementById('upkeep-estimate').textContent = calculateUpkeep(playerKingdom);
+            document.getElementById('turn-display').textContent = `Tur: ${gameState.turn}`;
+            for (const regionId in gameState.regions) {
+                const regionEl = document.getElementById(regionId);
+                if(regionEl){
+                    const region = gameState.regions[regionId];
+                    const ownerKingdomDetails = KINGDOM_DETAILS[region.owner];
+                    const ownerSpan = regionEl.querySelector('.region-owner');
+                    if(ownerKingdomDetails) {
+                        regionEl.style.backgroundColor = ownerKingdomDetails.color;
+                        if(ownerSpan) ownerSpan.textContent = ownerKingdomDetails.name;
+                    } else if (region.terrain !== 'plains') {
+                        if(ownerSpan) ownerSpan.textContent = "";
+                    } else {
+                        regionEl.style.backgroundColor = '#b0bec5';
+                        if(ownerSpan) ownerSpan.textContent = "Sahipsiz";
+                    }
+                }
+            }
+            document.getElementById('attack-btn').disabled = gameState.playerAttackedThisTurn;
+            document.getElementById('attack-btn').title = gameState.playerAttackedThisTurn ? "Bu tur zaten savaştınız." : "Savaş Aç";
+            renderMessages();
+        }
+        
+        // --- CALCULATIONS & HELPERS ---
+        function calculateIncome(kingdom) { if (!kingdom) return 0; return Math.floor(kingdom.population * (kingdom.taxRate / 100) * 0.5); }
+        function calculateUpkeep(kingdom) {
+            if (!kingdom || !kingdom.army) return 0;
+            let totalUpkeep = 0;
+            for (const unitType in kingdom.army) {
+                if (UNIT_STATS[unitType]) totalUpkeep += kingdom.army[unitType] * UNIT_STATS[unitType].upkeep;
+            }
+            return Math.floor(totalUpkeep * gameState.upkeepModifier);
+        }
+        function areKingdomsAdjacent(kingdomId1, kingdomId2) {
+            if (!kingdomId1 || !kingdomId2) return false;
+            const kingdom1Regions = Object.values(gameState.regions).filter(r => r.owner === kingdomId1);
+            for (const region of kingdom1Regions) {
+                const neighbors = REGION_ADJACENCY[region.id] || [];
+                for (const neighborId of neighbors) {
+                    if (gameState.regions[neighborId] && gameState.regions[neighborId].owner === kingdomId2) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        // --- MODAL & BUTTON LOGIC ---
+        // (Tüm modal event listener'ları ve fonksiyonları buraya eklenecek, önceki cevapla aynıdır)
+   // --- MODAL & BUTTON LOGIC ---
+    // Barracks Modal
+    const barracksModal = document.getElementById('barracks-modal');
+    document.getElementById('barracks-btn').addEventListener('click', () => {
+        const player = gameState.kingdoms[PLAYER_KINGDOM_ID];
+        document.getElementById('modal-recruitable-pop').textContent = player.recruitablePop;
+        document.getElementById('modal-current-gold').textContent = player.gold;
+        document.getElementById('recruit-infantry-slider').value = 0;
+        document.getElementById('recruit-archer-slider').value = 0;
+        document.getElementById('recruit-cavalry-slider').value = 0;
+        updateRecruitSliders();
+        barracksModal.style.display = 'block';
+    });
+    document.getElementById('close-barracks-btn').addEventListener('click', () => barracksModal.style.display = 'none');
+    document.getElementById('recruit-sliders').addEventListener('input', updateRecruitSliders);
+
+    function updateRecruitSliders() {
+        const player = gameState.kingdoms[PLAYER_KINGDOM_ID];
+        const sliders = { infantry: document.getElementById('recruit-infantry-slider'), archer: document.getElementById('recruit-archer-slider'), cavalry: document.getElementById('recruit-cavalry-slider') };
+        const values = { infantry: parseInt(sliders.infantry.value), archer: parseInt(sliders.archer.value), cavalry: parseInt(sliders.cavalry.value) };
+        let totalCost = (values.infantry * UNIT_STATS.infantry.price) + (values.archer * UNIT_STATS.archer.price) + (values.cavalry * UNIT_STATS.cavalry.price);
+        let totalPop = values.infantry + values.archer + values.cavalry;
+        while (totalCost > player.gold || totalPop > player.recruitablePop) {
+            if (values.cavalry > 0 && (totalCost > player.gold || totalPop > player.recruitablePop)) { values.cavalry--; } 
+            else if (values.archer > 0 && (totalCost > player.gold || totalPop > player.recruitablePop)) { values.archer--; }
+            else if (values.infantry > 0 && (totalCost > player.gold || totalPop > player.recruitablePop)) { values.infantry--; } 
+            else { break; }
+            totalCost = (values.infantry * UNIT_STATS.infantry.price) + (values.archer * UNIT_STATS.archer.price) + (values.cavalry * UNIT_STATS.cavalry.price);
+            totalPop = values.infantry + values.archer + values.cavalry;
+        }
+        sliders.infantry.value = values.infantry; sliders.archer.value = values.archer; sliders.cavalry.value = values.cavalry;
+        document.getElementById('recruit-infantry-value').textContent = values.infantry;
+        document.getElementById('recruit-archer-value').textContent = values.archer;
+        document.getElementById('recruit-cavalry-value').textContent = values.cavalry;
+        sliders.infantry.max = values.infantry + Math.min(player.recruitablePop - totalPop, Math.floor((player.gold - totalCost) / UNIT_STATS.infantry.price));
+        sliders.archer.max = values.archer + Math.min(player.recruitablePop - totalPop, Math.floor((player.gold - totalCost) / UNIT_STATS.archer.price));
+        sliders.cavalry.max = values.cavalry + Math.min(player.recruitablePop - totalPop, Math.floor((player.gold - totalCost) / UNIT_STATS.cavalry.price));
+        document.getElementById('total-recruit-cost').textContent = totalCost;
+        document.getElementById('total-recruit-pop').textContent = totalPop;
+    }
+
+    document.getElementById('confirm-recruit-btn').addEventListener('click', () => {
+        const player = gameState.kingdoms[PLAYER_KINGDOM_ID];
+        const inf = parseInt(document.getElementById('recruit-infantry-slider').value), arc = parseInt(document.getElementById('recruit-archer-slider').value), cav = parseInt(document.getElementById('recruit-cavalry-slider').value);
+        const cost = (inf * UNIT_STATS.infantry.price) + (arc * UNIT_STATS.archer.price) + (cav * UNIT_STATS.cavalry.price), pop = inf + arc + cav;
+        if(pop === 0) return; player.gold -= cost; player.recruitablePop -= pop;
+        player.army.infantry += inf; player.army.archer += arc; player.army.cavalry += cav;
+        addMessage("Orduya yeni askerler katıldı.", "success");
+        barracksModal.style.display = 'none'; updateUI();
+    });
+
+    const taxModal = document.getElementById('tax-modal');
+    document.getElementById('tax-btn').addEventListener('click', () => {
+        const player = gameState.kingdoms[PLAYER_KINGDOM_ID];
+        document.getElementById('tax-rate-slider').value = player.taxRate;
+        updateTaxModalDetails(player); taxModal.style.display = 'block';
+    });
+    document.getElementById('tax-rate-slider').addEventListener('input', (e) => { const tempPlayer = {...gameState.kingdoms[PLAYER_KINGDOM_ID], taxRate: parseInt(e.target.value) }; updateTaxModalDetails(tempPlayer); });
+    function updateTaxModalDetails(kingdom) {
+        document.getElementById('tax-rate-value').textContent = kingdom.taxRate;
+        document.getElementById('modal-income').textContent = calculateIncome(kingdom);
+        document.getElementById('modal-upkeep').textContent = calculateUpkeep(kingdom);
+        let risk = "Çok Düşük";
+        if (kingdom.taxRate > 40) risk = "Çok Yüksek!"; else if (kingdom.taxRate > 30) risk = "Yüksek"; else if (kingdom.taxRate > 20) risk = "Orta"; else if (kingdom.taxRate > 10) risk = "Düşük";
+        document.getElementById('rebellion-risk').textContent = risk;
+    }
+    document.getElementById('close-tax-btn').addEventListener('click', () => taxModal.style.display = 'none');
+    document.getElementById('confirm-tax-btn').addEventListener('click', () => {
+        gameState.kingdoms[PLAYER_KINGDOM_ID].taxRate = parseInt(document.getElementById('tax-rate-slider').value);
+        addMessage("Vergi oranı güncellendi.", "success");
+        taxModal.style.display = 'none'; updateUI();
+    });
+
+    // --- SAVAŞ SİSTEMİ MANTIĞI ---
+    const battleModal = document.getElementById('battle-modal');
+    const defenseModal = document.getElementById('defense-modal');
+    document.getElementById('close-battle-modal-btn').addEventListener('click', () => battleModal.style.display = 'none');
+    
+    document.getElementById('attack-btn').addEventListener('click', () => {
+        if (gameState.playerAttackedThisTurn) { addMessage("Bu tur zaten bir savaş başlattınız.", "error"); return; }
+        const targetRegion = gameState.regions[gameState.selectedRegionId];
+        if (!targetRegion || targetRegion.owner === PLAYER_KINGDOM_ID || !targetRegion.owner) { addMessage("Savaş açmak için bir düşman bölgesi seçin.", "error"); return; }
+        if (!areKingdomsAdjacent(PLAYER_KINGDOM_ID, targetRegion.owner)) { addMessage("Bu krallıkla sınır komşusu değilsiniz!", "error"); return; }
+        const player = gameState.kingdoms[PLAYER_KINGDOM_ID];
+        if ((player.army.infantry + player.army.archer + player.army.cavalry) < 40) { addMessage("Savaş açmak için en az 40 birimlik bir orduya sahip olmalısınız.", "error"); return; }
+        gameState.activeBattle = { attackerId: PLAYER_KINGDOM_ID, defenderId: targetRegion.owner, targetRegionId: targetRegion.id, playerRole: 'attacker' };
+        openBattleModal();
+    });
+
+    function openBattleModal() {
+        const defender = gameState.kingdoms[gameState.activeBattle.defenderId];
+        document.getElementById('battle-modal-title').textContent = `${defender.name} Krallığına Savaş Planı`;
+        const grid = document.getElementById('battle-grid');
+        grid.innerHTML = '';
+        for (let i = 0; i < 4; i++) {
+            grid.innerHTML += `<div class="battle-tile" data-tile-id="${i}"><h5>Bölge ${i + 1}</h5>
+                <div class="slider-container"><label>🚶<span data-unit-value="infantry">0</span></label><input type="range" min="0" value="0" data-unit="infantry" oninput="updateAllocationSliders('battle-grid')"></div>
+                <div class="slider-container"><label>🏹<span data-unit-value="archer">0</span></label><input type="range" min="0" value="0" data-unit="archer" oninput="updateAllocationSliders('battle-grid')"></div>
+                <div class="slider-container"><label>🐎<span data-unit-value="cavalry">0</span></label><input type="range" min="0" value="0" data-unit="cavalry" oninput="updateAllocationSliders('battle-grid')"></div>
+                <div class="tile-power">Güç: 0</div></div>`;
+        }
+        updateAllocationSliders('battle-grid');
+        battleModal.style.display = 'block';
+    }
+
+    function openDefenseModal() {
+        const attacker = gameState.kingdoms[gameState.activeBattle.attackerId];
+        document.getElementById('defense-modal-title').textContent = `${attacker.name} Saldırısına Karşı Savunma Planı`;
+        const grid = document.getElementById('defense-grid');
+        grid.innerHTML = '';
+        for (let i = 0; i < 4; i++) {
+            grid.innerHTML += `<div class="battle-tile" data-tile-id="${i}"><h5>Bölge ${i + 1}</h5>
+                <div class="slider-container"><label>🚶<span data-unit-value="infantry">0</span></label><input type="range" min="0" value="0" data-unit="infantry" oninput="updateAllocationSliders('defense-grid')"></div>
+                <div class="slider-container"><label>🏹<span data-unit-value="archer">0</span></label><input type="range" min="0" value="0" data-unit="archer" oninput="updateAllocationSliders('defense-grid')"></div>
+                <div class="slider-container"><label>🐎<span data-unit-value="cavalry">0</span></label><input type="range" min="0" value="0" data-unit="cavalry" oninput="updateAllocationSliders('defense-grid')"></div>
+                <div class="tile-power">Güç: 0</div></div>`;
+        }
+        updateAllocationSliders('defense-grid');
+        defenseModal.style.display = 'block';
+    }
+
+    function updateAllocationSliders(gridId) {
+        const player = gameState.kingdoms[PLAYER_KINGDOM_ID];
+        const availableArmy = {...player.army};
+        const sliders = { infantry: [], archer: [], cavalry: [] };
+        let totalAllocated = { infantry: 0, archer: 0, cavalry: 0 };
+
+        document.querySelectorAll(`#${gridId} input[type="range"]`).forEach(slider => sliders[slider.dataset.unit].push(slider));
+        Object.keys(sliders).forEach(unitType => { totalAllocated[unitType] = sliders[unitType].reduce((sum, s) => sum + parseInt(s.value), 0); });
+        Object.keys(sliders).forEach(unitType => {
+            sliders[unitType].forEach(slider => {
+                const currentVal = parseInt(slider.value);
+                const allocatedElsewhere = totalAllocated[unitType] - currentVal;
+                slider.max = availableArmy[unitType] - allocatedElsewhere;
+                slider.parentElement.querySelector('span').textContent = currentVal;
+                let power = 0;
+                slider.closest('.battle-tile').querySelectorAll('input[type="range"]').forEach(s => { power += parseInt(s.value) * UNIT_STATS[s.dataset.unit].power; });
+                slider.closest('.battle-tile').querySelector('.tile-power').textContent = `Güç: ${power.toFixed(2)}`;
+            });
+        });
+        const displayPrefix = gridId === 'battle-grid' ? 'available' : 'garrison';
+        document.getElementById(`${displayPrefix}-infantry`).textContent = availableArmy.infantry - totalAllocated.infantry;
+        document.getElementById(`${displayPrefix}-archer`).textContent = availableArmy.archer - totalAllocated.archer;
+        document.getElementById(`${displayPrefix}-cavalry`).textContent = availableArmy.cavalry - totalAllocated.cavalry;
+    }
+    
+    function getPlayerAllocation(gridId) {
+        let allocation = {}, totalAllocated = { infantry: 0, archer: 0, cavalry: 0 };
+        const player = gameState.kingdoms[PLAYER_KINGDOM_ID];
+        document.querySelectorAll(`#${gridId} .battle-tile`).forEach(tile => {
+            const tileId = tile.dataset.tileId;
+            const inf = parseInt(tile.querySelector('[data-unit="infantry"]').value);
+            const arc = parseInt(tile.querySelector('[data-unit="archer"]').value);
+            const cav = parseInt(tile.querySelector('[data-unit="cavalry"]').value);
+            allocation[tileId] = { infantry: inf, archer: arc, cavalry: cav };
+            totalAllocated.infantry += inf; totalAllocated.archer += arc; totalAllocated.cavalry += cav;
+        });
+        if (totalAllocated.infantry > player.army.infantry || totalAllocated.archer > player.army.archer || totalAllocated.cavalry > player.army.cavalry) {
+            addMessage("Sahip olduğunuzdan fazla asker yerleştiremezsiniz!", "error"); return null;
+        }
+        return allocation;
+    }
+
+    function aiDistributeTroops(army) {
+        let allocation = {}, armyPool = {...army};
+        for (let i = 0; i < 4; i++) { allocation[i] = { infantry: 0, archer: 0, cavalry: 0 }; }
+        Object.keys(armyPool).forEach(unitType => {
+            let unitsToAllocate = armyPool[unitType];
+            while (unitsToAllocate > 0) {
+                const targetTile = Math.floor(Math.random() * 4);
+                const amount = Math.min(unitsToAllocate, Math.ceil(Math.random() * unitsToAllocate * 0.8) + 1);
+                allocation[targetTile][unitType] += amount;
+                unitsToAllocate -= amount;
+            }
+        });
+        return allocation;
+    }
+
+    document.getElementById('confirm-battle-plan-btn').addEventListener('click', () => {
+        const battle = gameState.activeBattle;
+        battle.attackerAllocation = getPlayerAllocation('battle-grid');
+        if (!battle.attackerAllocation) return;
+        
+        const defender = gameState.kingdoms[battle.defenderId];
+        const defendingRegion = gameState.regions[battle.targetRegionId];
+        let defendingArmy = defender.army;
+        // Eğer saldırılan bölge başkent değilse, ordunun sadece bir kısmını kullan
+        if (!defendingRegion.isKingdomCapital) {
+            defendingArmy = {
+                infantry: Math.floor(defender.army.infantry * 0.4),
+                archer: Math.floor(defender.army.archer * 0.4),
+                cavalry: Math.floor(defender.army.cavalry * 0.4),
+            };
+        }
+        battle.defenderAllocation = aiDistributeTroops(defendingArmy);
+        resolveBattle();
+        battleModal.style.display = 'none';
+    });
+
+     document.getElementById('confirm-defense-plan-btn').addEventListener('click', () => {
+        gameState.activeBattle.defenderAllocation = getPlayerAllocation('defense-grid');
+        if (!gameState.activeBattle.defenderAllocation) return;
+        resolveBattle();
+        defenseModal.style.display = 'none';
+        finishTurn();
+    });
+
+    function resolveBattle() {
+        const battle = gameState.activeBattle, attacker = gameState.kingdoms[battle.attackerId], defender = gameState.kingdoms[battle.defenderId];
+        let attackerTilesWon = 0;
+        for (let i = 0; i < 4; i++) {
+            const attTile = battle.attackerAllocation[i], defTile = battle.defenderAllocation[i];
+            const attPower = (attTile.infantry * 1) + (attTile.archer * 1.25) + (attTile.cavalry * 1.5);
+            const defPower = (defTile.infantry * 1) + (defTile.archer * 1.25) + (defTile.cavalry * 1.5);
+            if (attPower > defPower) {
+                attackerTilesWon++;
+                defender.army.infantry -= defTile.infantry; defender.army.archer -= defTile.archer; defender.army.cavalry -= defTile.cavalry;
+                attacker.army.infantry -= Math.floor(attTile.infantry * 0.3); attacker.army.archer -= Math.floor(attTile.archer * 0.3); attacker.army.cavalry -= Math.floor(attTile.cavalry * 0.3);
+            } else {
+                attacker.army.infantry -= attTile.infantry; attacker.army.archer -= attTile.archer; attacker.army.cavalry -= attTile.cavalry;
+                defender.army.infantry -= Math.floor(defTile.infantry * 0.3); defender.army.archer -= Math.floor(defTile.archer * 0.3); defender.army.cavalry -= Math.floor(defTile.cavalry * 0.3);
+            }
+        }
+        Object.keys(attacker.army).forEach(k => attacker.army[k] = Math.max(0, attacker.army[k]));
+        Object.keys(defender.army).forEach(k => defender.army[k] = Math.max(0, defender.army[k]));
+        
+        if (attackerTilesWon >= 3) {
+            addMessage(`${attacker.name}, ${defender.name}'a ait ${gameState.regions[battle.targetRegionId].name} bölgesini fethetti!`, "battle_win");
+            gameState.regions[battle.targetRegionId].owner = battle.attackerId;
+            if(attacker.isPlayer) attacker.lastExpansionTurn = gameState.turn;
+        } else {
+            addMessage(`${attacker.name} saldırısı, ${defender.name} tarafından püskürtüldü!`, "battle_lose");
+        }
+        gameState.activeBattle = null;
+        if (attacker.isPlayer) gameState.playerAttackedThisTurn = true;
+        updateUI();
+    }
+    
+    document.querySelectorAll('.map-region').forEach(regionEl => {
+        regionEl.addEventListener('click', () => {
+            gameState.selectedRegionId = regionEl.id;
+            updateUI();
+        });
+    });
+
+    // --- TUR ATLAMA MANTIĞI ---
+    document.getElementById('next-turn-btn').addEventListener('click', startTurn);
+    
+    function startTurn(){
+        const nextTurnBtn = document.getElementById('next-turn-btn');
+        if (nextTurnBtn.disabled) return;
+        nextTurnBtn.disabled = true;
+        gameState.turn++;
+        gameState.playerAttackedThisTurn = false;
+        if (gameState.turn > 1 && gameState.turn % 20 === 0) { gameState.upkeepModifier += 0.05; addMessage(`Artan krallık masrafları nedeniyle asker bakım maliyetleri %5 arttı!`, "info"); }
+        
+        const player = gameState.kingdoms[PLAYER_KINGDOM_ID];
+        for (const kId in gameState.kingdoms) {
+            const kingdom = gameState.kingdoms[kId];
+            if (kingdom.aiControlled && kingdom.id !== player.id) {
+                if(areKingdomsAdjacent(kId, PLAYER_KINGDOM_ID)) {
+                    let aggressionChance = 0.05;
+                    if (kingdom.population > player.population * 1.2) aggressionChance += 0.1;
+                    if (gameState.turn - player.lastExpansionTurn > 25) aggressionChance += 0.2; 
+                    if (Math.random() < aggressionChance) {
+                        const targetablePlayerRegions = Object.values(gameState.regions).filter(r => r.owner === PLAYER_KINGDOM_ID && (REGION_ADJACENCY[r.id] || []).some(nId => gameState.regions[nId]?.owner === kId));
+                        if(targetablePlayerRegions.length > 0) {
+                            const targetRegion = targetablePlayerRegions[Math.floor(Math.random() * targetablePlayerRegions.length)];
+                            gameState.activeBattle = { attackerId: kId, defenderId: PLAYER_KINGDOM_ID, targetRegionId: targetRegion.id, playerRole: 'defender', attackerAllocation: aiDistributeTroops(kingdom.army), defenderAllocation: {} };
+                            openDefenseModal();
+                            return; 
+                        }
+                    }
+                }
+            }
+        }
+        finishTurn();
+    }
+
+    function finishTurn() {
+        for (const kId in gameState.kingdoms) {
+            const kingdom = gameState.kingdoms[kId];
+            kingdom.gold += calculateIncome(kingdom);
+            kingdom.gold -= calculateUpkeep(kingdom);
+            if (kingdom.id === PLAYER_KINGDOM_ID) {
+                if (kingdom.gold > 10000) { const cost = Math.floor((kingdom.gold - 10000) * 0.02); kingdom.gold -= cost; if(cost > 0) addMessage(`Yolsuzluk nedeniyle ${cost} altın kayboldu.`, "error"); }
+                if (Math.random() < 0.20) triggerRandomEvent(kingdom);
+            }
+        }
+        addMessage(`Tur ${gameState.turn} sona erdi.`, "info");
+        updateUI();
+        const isGameOver = checkGameEndConditions();
+        if (!isGameOver) document.getElementById('next-turn-btn').disabled = false;
+    }
+
+    function triggerRandomEvent(kingdom) {
+        const events = [ { name: "Kıtlık", type: "negative", message: "Topraklarınızda kıtlık baş gösterdi!", cost: 3000, happiness_loss: 10 }, { name: "Salgın", type: "negative", message: "Başkentte salgın hastalık ortaya çıktı!", pop_loss_percent: 0.10 }, { name: "Haydutlar", type: "negative", message: "Haydutlar hazinenizden altın çaldı!", gold_loss_percent: 0.05 }, { name: "Bereket", type: "positive", message: "Bu yılki hasat çok bereketli geçti!", happiness_gain: 10, gold_gain: 1500 }, { name: "Firar", type: "negative", message: "Bazı askerleriniz ordudan firar etti!", army_loss_percent: 0.05 } ];
+        const event = events[Math.floor(Math.random() * events.length)];
+        if(event.cost && kingdom.gold < event.cost) return;
+        addMessage(`OLAY: ${event.message}`, event.type === 'negative' ? 'error' : 'success');
+        if (event.cost) kingdom.gold -= event.cost;
+        if (event.gold_gain) kingdom.gold += event.gold_gain;
+        if (event.happiness_loss) kingdom.happiness = Math.max(0, kingdom.happiness - event.happiness_loss);
+        if (event.happiness_gain) kingdom.happiness = Math.min(100, kingdom.happiness + event.happiness_gain);
+        if (event.pop_loss_percent) kingdom.population = Math.floor(kingdom.population * (1 - event.pop_loss_percent));
+        if (event.gold_loss_percent) kingdom.gold = Math.floor(kingdom.gold * (1 - event.gold_loss_percent));
+        if (event.army_loss_percent) { kingdom.army.infantry = Math.floor(kingdom.army.infantry * (1 - event.army_loss_percent)); kingdom.army.archer = Math.floor(kingdom.army.archer * (1 - event.army_loss_percent)); kingdom.army.cavalry = Math.floor(kingdom.army.cavalry * (1 - event.army_loss_percent)); }
+    }
+    
+    // --- OYUN SONU KONTROLÜ ---
+    function checkGameEndConditions() {
+        const player = gameState.kingdoms[PLAYER_KINGDOM_ID];
+        let playerOwnedRegionCount = 0, isGameOver = false;
+        for (const regionId in gameState.regions) { if (gameState.regions[regionId].owner === PLAYER_KINGDOM_ID) playerOwnedRegionCount++; }
+        const playerCapitalStillOwned = player.mainRegionId && gameState.regions[player.mainRegionId]?.owner === PLAYER_KINGDOM_ID;
+        if (playerOwnedRegionCount === 0 || !playerCapitalStillOwned) {
+            document.getElementById('game-over-modal').style.display = 'block';
+            isGameOver = true;
+        }
+        if (isGameOver) document.getElementById('next-turn-btn').disabled = true;
+        return isGameOver;
+    }
+    
+    initializeOrLoadGame();
+</script>
+</body>
+</html>
