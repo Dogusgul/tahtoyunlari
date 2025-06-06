@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Taht Savaşları</title>
     <style>
+        html {
+            scroll-behavior: smooth; /* Sayfa kaydırmalarını yumuşatır */
+        }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #1a1a1a;
@@ -18,7 +21,7 @@
             transition: background-color 0.5s ease;
         }
 
-        /* --- YENİ: Başlangıç Menüsü Stilleri --- */
+        /* --- BAŞLANGIÇ MENÜSÜ --- */
         #start-menu {
             display: flex;
             flex-direction: column;
@@ -77,7 +80,7 @@
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
         }
 
-        /* --- Oyun Arayüzü Başlangıçta Gizli --- */
+        /* --- OYUN ARYÜZÜ --- */
         #game-window {
             display: none;
             width: 90%;
@@ -215,9 +218,9 @@
         .error { color: #a94442 !important; }
         .info { color: #31708f !important; }
 
-        /* Modal Styles */
+        /* --- Modal Stilleri --- */
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.65); padding-top: 50px; }
-        .modal-content { background-color: #fefefe; margin: 3% auto; padding: 20px; border: 1px solid #bbb; width: 88%; max-width: 520px; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.25); position: relative; }
+        .modal-content { background-color: #fefefe; margin: 5% auto; padding: 20px; border: 1px solid #bbb; width: 88%; max-width: 520px; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.25); position: relative; }
         .modal-content.modal-lg { max-width: 800px; }
         .modal-content h3, .modal-content h4 { margin-top: 0; color: #2c3e50; border-bottom: 1px solid #e0e0e0; padding-bottom:8px; margin-bottom:15px;}
         .modal-content label { display: block; margin: 10px 0 5px; font-weight: 600; color: #444;}
@@ -228,14 +231,57 @@
         .close-btn:hover { background-color: #eea236; transform: translateY(-1px); }
         .action-btn { background-color: #5cb85c; color: white; border-bottom: 2px solid #4cae4c; }
         .action-btn:hover { background-color: #4cae4c; transform: translateY(-1px); }
-        #tutorial-modal-content { border-left: 5px solid #5bc0de; }
-        #tutorial-modal-content h3 { color: #31708f; }
-        #tutorial-text { font-size: 1.05em; line-height: 1.7; margin-bottom: 25px; color: #333; }
-        #tutorial-modal .action-btn, #tutorial-modal .close-btn { padding: 10px 22px; }
+        
         #prev-tutorial-btn, #prev-combat-tutorial-btn { background-color: #777; border-bottom-color: #555; }
         #prev-tutorial-btn:hover, #prev-combat-tutorial-btn:hover { background-color: #666; }
 
-        .highlight-tutorial-element { box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.8) !important; border-radius: 6px; transition: box-shadow 0.4s ease-in-out; position: relative; }
+        /* --- YENİ: Gelişmiş Rehber Stilleri --- */
+        .highlight-tutorial-element {
+            box-shadow: 0 0 0 4px rgba(91, 192, 222, 0.8) !important; /* Mavi bir parlama efekti */
+            border-radius: 6px;
+            transition: box-shadow 0.4s ease-in-out;
+            position: relative;
+            z-index: 10001 !important; /* Rehber kutusunun arkasında ama diğer her şeyin önünde */
+        }
+        #tutorial-popover {
+            display: none;
+            position: absolute; /* Sabit değil, dinamik konumlandırılacak */
+            z-index: 10002; /* Her şeyin en önünde */
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            padding: 20px;
+            max-width: 350px;
+            transition: top 0.3s ease, left 0.3s ease;
+            border-left: 5px solid #5bc0de;
+        }
+        #tutorial-popover::after { /* İşaretçi oku için */
+            content: '';
+            position: absolute;
+            width: 0; 
+            height: 0; 
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+        }
+        #tutorial-popover.arrow-top::after { /* Ok yukarıda olduğunda */
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-bottom: 10px solid #f9f9f9;
+        }
+        #tutorial-popover.arrow-bottom::after { /* Ok aşağıda olduğunda */
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-top: 10px solid #f9f9f9;
+        }
+        #tutorial-popover h3 { margin-top: 0; color: #31708f; border-bottom: 1px solid #e0e0e0; padding-bottom:8px; margin-bottom:15px; }
+        #tutorial-popover p { font-size: 1.05em; line-height: 1.6; color: #333; }
+        #tutorial-popover .modal-buttons button { padding: 10px 22px; }
+
+        /* --- Savaş Sistemi Rehberi için eski stil --- */
+        #combat-tutorial-modal .modal-content { border-left: 5px solid #337ab7; }
 
         /* BATTLE MODAL STYLES */
         #battle-grid, #defense-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
@@ -248,18 +294,20 @@
         #available-army-display p, #garrison-army-display p { margin: 2px 0; font-weight: bold; }
         #available-army-display span, #garrison-army-display span { margin: 0 5px; }
 
-        /* --- YENİ: Mobil Cihazlar İçin Duyarlılık Ayarları --- */
+        /* --- Mobil Cihazlar İçin Duyarlılık Ayarları --- */
         @media (max-width: 768px) {
             #main-controls, #game-management-controls {
                 flex-wrap: wrap; /* Butonların taşmasını engeller ve alt satıra indirir */
                 gap: 10px;
             }
 
-            #info-and-controls {
-                grid-template-columns: 1fr; /* Ordu, Hazine, Nüfus kutularını dikey olarak sıralar */
+            #info-and-controls, #map-container {
+                grid-template-columns: 1fr; /* Bilgi kutularını ve haritayı dikey olarak sıralar */
+            }
+             #map-container {
+                grid-template-rows: repeat(auto-fill, 120px);
             }
         }
-
     </style>
 </head>
 <body>
@@ -402,15 +450,13 @@
         </div>
     </div>
     
-    <div id="tutorial-modal" class="modal">
-        <div class="modal-content" id="tutorial-modal-content">
-            <h3 id="tutorial-title">Oyuna Hoş Geldin!</h3>
-            <p id="tutorial-text">Bu rehber sana oyunun temellerini öğretecek.</p>
-            <div class="modal-buttons">
-                <button class="action-btn" id="prev-tutorial-btn" style="display:none;">Geri</button>
-                <button class="action-btn" id="next-tutorial-btn">İleri</button>
-                <button class="close-btn" id="end-tutorial-btn" style="display:none;">Rehberi Kapat</button>
-            </div>
+    <div id="tutorial-popover">
+        <h3 id="tutorial-title">Oyuna Hoş Geldin!</h3>
+        <p id="tutorial-text">Bu rehber sana oyunun temellerini öğretecek.</p>
+        <div class="modal-buttons">
+            <button class="action-btn" id="prev-tutorial-btn" style="display:none;">Geri</button>
+            <button class="action-btn" id="next-tutorial-btn">İleri</button>
+            <button class="close-btn" id="end-tutorial-btn" style="display:none;">Rehberi Kapat</button>
         </div>
     </div>
     
@@ -467,14 +513,17 @@
     <audio id="sfx-tax" src="audio/tax_open.wav"></audio>
     <audio id="sfx-attack" src="audio/attack_plan.wav"></audio>
     <audio id="sfx-defense-alert" src="audio/defense_alert.wav"></audio>
+    <audio id="sfx-victory" src="audio/zafer.wav"></audio>
+    <audio id="sfx-defeat" src="audio/bozgun.wav"></audio>
 
     <script>
-        // --- Ses Değişkenleri (Intro Kaldırıldı) ---
         const gameplayMusic = document.getElementById('gameplay-music');
         const sfxBarracks = document.getElementById('sfx-barracks');
         const sfxTax = document.getElementById('sfx-tax');
         const sfxAttack = document.getElementById('sfx-attack');
         const sfxDefenseAlert = document.getElementById('sfx-defense-alert');
+        const sfxVictory = document.getElementById('sfx-victory');
+        const sfxDefeat = document.getElementById('sfx-defeat');
 
         const gameplayPlaylist = [
             'audio/gameplay1.mp3',
@@ -536,14 +585,15 @@
             gameplayMusic.play();
         });
 
-        // --- REHBER SİSTEMİ ---
-        const tutorialModal = document.getElementById('tutorial-modal');
+        // --- GÜNCELLENDİ: Gelişmiş Rehber Sistemi ---
+        const tutorialPopover = document.getElementById('tutorial-popover');
         const tutorialTextEl = document.getElementById('tutorial-text');
         const tutorialTitleEl = document.getElementById('tutorial-title');
         const nextTutorialBtn = document.getElementById('next-tutorial-btn');
         const prevTutorialBtn = document.getElementById('prev-tutorial-btn');
         const endTutorialBtn = document.getElementById('end-tutorial-btn');
         let currentTutorialStepIdx = 0;
+        let highlightedElement = null;
         
         const combatTutorialModal = document.getElementById('combat-tutorial-modal');
         const combatTutorialTextEl = document.getElementById('combat-tutorial-text');
@@ -567,13 +617,13 @@
 
         const tutorialSteps = [
             { title: "Oyuna Hoş Geldin!", text: "Taht Savaşları'na hoş geldin! Bu rehber sana oyunun temellerini öğretecek." },
-            { elementId: 'map-container', title: "Harita", text: "Burası oyun haritası. Krallıklar ve bölgeler burada yer alır." },
+            { elementId: 'map-container', title: "Harita", text: "Burası oyun haritası. Krallıklar ve bölgeler burada yer alır. Bölgelere tıklayarak seçebilirsin." },
             { elementId: 'OYUNCU_BOLGE_A', title: "Başkentin", text: "Bu senin başlangıç bölgen ve başkentin. Başkenti kaybetmek oyunu kaybetmek demektir!" },
             { elementId: 'info-and-controls', title: "Krallık Paneli", text: "Bu panelde krallığının Ordu, Hazine ve Nüfus bilgilerini görebilirsin." },
-            { elementId: 'barracks-btn', title: "Karargâh", text: "Karargâh butonu ile yeni askerler alabilirsin." },
-            { elementId: 'tax-btn', title: "Vergi ve Maliyet", text: "Vergi butonu ile vergi oranını ayarlayabilirsin. Yüksek vergi geliri artırır ama mutluluğu düşürür." },
-            { elementId: 'attack-btn', title: "Savaş Aç", text: "Sınır komşun olan bir düşman bölgesine tıklayıp bu buton ile savaş ilan edebilirsin." },
-            { elementId: 'next-turn-btn', title: "Turu Bitir", text: "Turu Bitir butonu ile zamanı ilerletirsin. Gelirler toplanır, giderler ödenir ve olaylar gerçekleşir." },
+            { elementId: 'barracks-btn', title: "Karargâh", text: "Karargâh butonu ile yeni askerler alabilirsin. Asker almak için altına ve yeterli nüfusa ihtiyacın var." },
+            { elementId: 'tax-btn', title: "Vergi ve Maliyet", text: "Vergi butonu ile vergi oranını ayarlayabilirsin. Yüksek vergi geliri artırır ama halkının mutluluğunu düşürür. Mutsuz halk isyan edebilir!" },
+            { elementId: 'attack-btn', title: "Savaş Aç", text: "Sınır komşun olan bir düşman bölgesine tıkladıktan sonra bu buton ile savaş ilan edebilirsin." },
+            { elementId: 'next-turn-btn', title: "Turu Bitir", text: "Turu Bitir butonu ile zamanı ilerletirsin. Gelirler toplanır, giderler ödenir ve diğer krallıklar da hamlelerini yapar." },
             { elementId: 'messages-container', title: "Olaylar ve Mesajlar", text: "Oyun içi önemli gelişmeler burada bildirilir. Rastgele olaylar, savaş sonuçları ve ekonomik durumun hakkında bilgi alırsın." },
             { title: "Rehber Sonu", text: "Rehber tamamlandı! Daha detaylı savaş mekanikleri için Savaş Sistemi Rehberi'ne göz at. Bol şans!" }
         ];
@@ -587,21 +637,110 @@
             { title: "Savunma Zaferi", text: "Savunmadayken en az 2 kareyi korumayı başarırsan (yani rakip 3 kare alamazsa), saldırıyı püskürtmüş olursun." }
         ];
 
-        function startTutorial() { currentTutorialStepIdx = 0; showTutorialStep(tutorialSteps, tutorialModal, tutorialTitleEl, tutorialTextEl, nextTutorialBtn, prevTutorialBtn, endTutorialBtn); }
-        function startCombatTutorial() { currentCombatTutorialStepIdx = 0; showTutorialStep(combatTutorialSteps, combatTutorialModal, combatTutorialTitleEl, combatTutorialTextEl, nextCombatTutorialBtn, prevCombatTutorialBtn, endCombatTutorialBtn); }
-        function showTutorialStep(steps, modal, titleEl, textEl, nextBtn, prevBtn, endBtn) {
-            const currentIdx = modal === tutorialModal ? currentTutorialStepIdx : currentCombatTutorialStepIdx;
-            if (currentIdx < 0 || currentIdx >= steps.length) return;
-            const step = steps[currentIdx];
-            titleEl.textContent = step.title; textEl.textContent = step.text;
-            modal.style.display = 'block';
-            prevBtn.style.display = currentIdx > 0 ? 'inline-block' : 'none';
-            endBtn.style.display = currentIdx === steps.length - 1 ? 'inline-block' : 'none';
-            nextBtn.style.display = currentIdx < steps.length - 1 ? 'inline-block' : 'none';
+        function startTutorial() {
+            currentTutorialStepIdx = 0; 
+            showTutorialStep();
         }
-        [nextTutorialBtn, nextCombatTutorialBtn].forEach(btn => { btn.addEventListener('click', () => { const modal = btn.closest('.modal'); if (modal.id === 'tutorial-modal') { if (currentTutorialStepIdx < tutorialSteps.length - 1) { currentTutorialStepIdx++; showTutorialStep(tutorialSteps, tutorialModal, tutorialTitleEl, tutorialTextEl, nextTutorialBtn, prevTutorialBtn, endTutorialBtn); } } else { if (currentCombatTutorialStepIdx < combatTutorialSteps.length - 1) { currentCombatTutorialStepIdx++; showTutorialStep(combatTutorialSteps, combatTutorialModal, combatTutorialTitleEl, combatTutorialTextEl, nextCombatTutorialBtn, prevCombatTutorialBtn, endCombatTutorialBtn); } } }); });
-        [prevTutorialBtn, prevCombatTutorialBtn].forEach(btn => { btn.addEventListener('click', () => { const modal = btn.closest('.modal'); if (modal.id === 'tutorial-modal') { if (currentTutorialStepIdx > 0) { currentTutorialStepIdx--; showTutorialStep(tutorialSteps, tutorialModal, tutorialTitleEl, tutorialTextEl, nextTutorialBtn, prevTutorialBtn, endTutorialBtn); } } else { if (currentCombatTutorialStepIdx > 0) { currentCombatTutorialStepIdx--; showTutorialStep(combatTutorialSteps, combatTutorialModal, combatTutorialTitleEl, combatTutorialTextEl, nextCombatTutorialBtn, prevCombatTutorialBtn, endCombatTutorialBtn); } } }); });
-        [endTutorialBtn, endCombatTutorialBtn].forEach(btn => btn.addEventListener('click', () => btn.closest('.modal').style.display = 'none'));
+
+        function endTutorial() {
+            if(highlightedElement) {
+                highlightedElement.classList.remove('highlight-tutorial-element');
+                highlightedElement = null;
+            }
+            tutorialPopover.style.display = 'none';
+        }
+
+        function showTutorialStep() {
+            if(highlightedElement) {
+                highlightedElement.classList.remove('highlight-tutorial-element');
+            }
+            tutorialPopover.classList.remove('arrow-top', 'arrow-bottom');
+            tutorialPopover.style.transform = 'none'; // Merkezi konumu sıfırla
+
+            const step = tutorialSteps[currentTutorialStepIdx];
+            if (!step) {
+                endTutorial();
+                return;
+            }
+            
+            tutorialTitleEl.textContent = step.title;
+            tutorialTextEl.textContent = step.text;
+            
+            const targetElement = step.elementId ? document.getElementById(step.elementId) : null;
+            highlightedElement = targetElement;
+
+            if (targetElement) {
+                targetElement.classList.add('highlight-tutorial-element');
+                targetElement.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                
+                setTimeout(() => {
+                    const targetRect = targetElement.getBoundingClientRect();
+                    const popoverRect = tutorialPopover.getBoundingClientRect();
+                    
+                    let top, left;
+                    
+                    if (targetRect.bottom + popoverRect.height + 20 < window.innerHeight) {
+                        top = targetRect.bottom + 10;
+                        tutorialPopover.classList.add('arrow-top');
+                    } else { 
+                        top = targetRect.top - popoverRect.height - 10;
+                         tutorialPopover.classList.add('arrow-bottom');
+                    }
+                    
+                    left = targetRect.left + (targetRect.width / 2) - (tutorialPopover.offsetWidth / 2);
+
+                    if (left < 10) left = 10;
+                    if (left + tutorialPopover.offsetWidth > window.innerWidth - 10) {
+                        left = window.innerWidth - tutorialPopover.offsetWidth - 10;
+                    }
+
+                    tutorialPopover.style.top = `${window.scrollY + top}px`;
+                    tutorialPopover.style.left = `${window.scrollX + left}px`;
+                    tutorialPopover.style.display = 'block';
+
+                }, 400);
+
+            } else { 
+                tutorialPopover.style.display = 'block';
+                tutorialPopover.style.top = '50%';
+                tutorialPopover.style.left = '50%';
+                tutorialPopover.style.transform = 'translate(-50%, -50%)';
+            }
+
+            prevTutorialBtn.style.display = currentTutorialStepIdx > 0 ? 'inline-block' : 'none';
+            endTutorialBtn.style.display = currentTutorialStepIdx === tutorialSteps.length - 1 ? 'inline-block' : 'none';
+            nextTutorialBtn.style.display = currentTutorialStepIdx < tutorialSteps.length - 1 ? 'inline-block' : 'none';
+        }
+
+        nextTutorialBtn.addEventListener('click', () => {
+            if (currentTutorialStepIdx < tutorialSteps.length - 1) {
+                currentTutorialStepIdx++;
+                showTutorialStep();
+            }
+        });
+        prevTutorialBtn.addEventListener('click', () => {
+            if (currentTutorialStepIdx > 0) {
+                currentTutorialStepIdx--;
+                showTutorialStep();
+            }
+        });
+        endTutorialBtn.addEventListener('click', endTutorial);
+
+
+        // Savaş rehberi (eski sistemde kaldı, istenirse bu da geliştirilebilir)
+        function startCombatTutorial() { currentCombatTutorialStepIdx = 0; showCombatTutorialStep(); }
+        function showCombatTutorialStep() {
+             if (currentCombatTutorialStepIdx < 0 || currentCombatTutorialStepIdx >= combatTutorialSteps.length) return;
+            const step = combatTutorialSteps[currentCombatTutorialStepIdx];
+            combatTutorialTitleEl.textContent = step.title; combatTutorialTextEl.textContent = step.text;
+            combatTutorialModal.style.display = 'block';
+            prevCombatTutorialBtn.style.display = currentCombatTutorialStepIdx > 0 ? 'inline-block' : 'none';
+            endCombatTutorialBtn.style.display = currentCombatTutorialStepIdx === combatTutorialSteps.length - 1 ? 'inline-block' : 'none';
+            nextCombatTutorialBtn.style.display = currentCombatTutorialStepIdx < combatTutorialSteps.length - 1 ? 'inline-block' : 'none';
+        }
+        nextCombatTutorialBtn.addEventListener('click', () => { if (currentCombatTutorialStepIdx < combatTutorialSteps.length - 1) { currentCombatTutorialStepIdx++; showCombatTutorialStep(); } });
+        prevCombatTutorialBtn.addEventListener('click', () => { if (currentCombatTutorialStepIdx > 0) { currentCombatTutorialStepIdx--; showCombatTutorialStep(); } });
+        endCombatTutorialBtn.addEventListener('click', () => combatTutorialModal.style.display = 'none');
 
 
         // --- OYUN KURULUMU VE YÖNETİMİ ---
@@ -658,6 +797,7 @@
                 localStorage.removeItem('tahtSavaslariTutorialCompleted');
                 
                 gameplayMusic.pause();
+                endTutorial(); // Rehber açıksa kapat
 
                 document.getElementById('game-window').style.display = 'none';
                 document.getElementById('start-menu').style.display = 'flex';
@@ -674,7 +814,6 @@
             gameplayMusic.pause();
         });
         document.getElementById('play-button').addEventListener('click', () => {
-            // Müzik geçişi
             gameplayMusic.src = gameplayPlaylist[currentTrackIndex];
             gameplayMusic.play().catch(e => console.log("Kullanıcı etkileşimi olmadan oyun içi müzik başlatılamadı."));
 
@@ -696,6 +835,7 @@
         // --- UI & DISPLAY ---
         function addMessage(text, type = "normal") { gameState.messages.unshift({ text, type, turn: gameState.turn }); if (gameState.messages.length > 20) gameState.messages.pop(); renderMessages(); }
         function renderMessages() { const messagesEl = document.getElementById('messages'); messagesEl.innerHTML = ''; if (!gameState.messages || gameState.messages.length === 0) { messagesEl.innerHTML = '<div>Henüz bir olay yok.</div>'; return; } gameState.messages.forEach(msg => { const msgEl = document.createElement('div'); msgEl.classList.add('message-item'); if (msg.type) msgEl.classList.add(msg.type); msgEl.textContent = `Tur ${msg.turn}: ${msg.text}`; messagesEl.appendChild(msgEl); }); }
+        
         function updateUI() {
             if (!gameState || !gameState.kingdoms || !gameState.playerKingdomId) return;
             const playerKingdom = gameState.kingdoms[gameState.playerKingdomId];
@@ -704,7 +844,10 @@
             if (gameState.selectedRegionId) document.getElementById(gameState.selectedRegionId)?.classList.add('selected-region');
             const selectedRegion = gameState.regions[gameState.selectedRegionId] || {};
             const ownerKingdom = gameState.kingdoms[selectedRegion.owner] || {};
-            document.getElementById('kingdom-name-display').textContent = selectedRegion.name ? `${selectedRegion.name} (${ownerKingdom.name || 'Sahipsiz'})` : playerKingdom.name;
+
+            // --- DÜZELTİLDİ ---
+            document.getElementById('kingdom-name-display').innerHTML = selectedRegion.name ? `${selectedRegion.name} (${ownerKingdom.name || 'Sahipsiz'})` : playerKingdom.name;
+            
             document.getElementById('infantry-count').textContent = playerKingdom.army.infantry;
             document.getElementById('archer-count').textContent = playerKingdom.army.archer;
             document.getElementById('cavalry-count').textContent = playerKingdom.army.cavalry;
@@ -766,7 +909,7 @@
     // Barracks Modal
     const barracksModal = document.getElementById('barracks-modal');
     document.getElementById('barracks-btn').addEventListener('click', () => {
-        sfxBarracks.play(); // YENİ: Ses efekti
+        sfxBarracks.play(); 
         const player = gameState.kingdoms[PLAYER_KINGDOM_ID];
         document.getElementById('modal-recruitable-pop').textContent = player.recruitablePop;
         document.getElementById('modal-current-gold').textContent = player.gold;
@@ -997,8 +1140,20 @@
             addMessage(`${attacker.name}, ${defender.name}'a ait ${gameState.regions[battle.targetRegionId].name} bölgesini fethetti!`, "battle_win");
             gameState.regions[battle.targetRegionId].owner = battle.attackerId;
             if(attacker.isPlayer) attacker.lastExpansionTurn = gameState.turn;
+
+            if (battle.attackerId === PLAYER_KINGDOM_ID) {
+                sfxVictory.play();
+            } else if (battle.defenderId === PLAYER_KINGDOM_ID) {
+                sfxDefeat.play();
+            }
         } else {
             addMessage(`${attacker.name} saldırısı, ${defender.name} tarafından püskürtüldü!`, "battle_lose");
+            
+            if (battle.attackerId === PLAYER_KINGDOM_ID) {
+                sfxDefeat.play();
+            } else if (battle.defenderId === PLAYER_KINGDOM_ID) {
+                sfxVictory.play();
+            }
         }
         gameState.activeBattle = null;
         if (attacker.isPlayer) gameState.playerAttackedThisTurn = true;
