@@ -248,6 +248,18 @@
         #available-army-display p, #garrison-army-display p { margin: 2px 0; font-weight: bold; }
         #available-army-display span, #garrison-army-display span { margin: 0 5px; }
 
+        /* --- YENİ: Mobil Cihazlar İçin Duyarlılık Ayarları --- */
+        @media (max-width: 768px) {
+            #main-controls, #game-management-controls {
+                flex-wrap: wrap; /* Butonların taşmasını engeller ve alt satıra indirir */
+                gap: 10px;
+            }
+
+            #info-and-controls {
+                grid-template-columns: 1fr; /* Ordu, Hazine, Nüfus kutularını dikey olarak sıralar */
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -450,7 +462,27 @@
         </div>
     </div>
 
+    <audio id="gameplay-music"></audio>
+    <audio id="sfx-barracks" src="audio/barracks_open.wav"></audio>
+    <audio id="sfx-tax" src="audio/tax_open.wav"></audio>
+    <audio id="sfx-attack" src="audio/attack_plan.wav"></audio>
+    <audio id="sfx-defense-alert" src="audio/defense_alert.wav"></audio>
+
     <script>
+        // --- Ses Değişkenleri (Intro Kaldırıldı) ---
+        const gameplayMusic = document.getElementById('gameplay-music');
+        const sfxBarracks = document.getElementById('sfx-barracks');
+        const sfxTax = document.getElementById('sfx-tax');
+        const sfxAttack = document.getElementById('sfx-attack');
+        const sfxDefenseAlert = document.getElementById('sfx-defense-alert');
+
+        const gameplayPlaylist = [
+            'audio/gameplay1.mp3',
+            'audio/gameplay2.mp3',
+            'audio/gameplay3.mp3'
+        ];
+        let currentTrackIndex = 0;
+
         // --- BAŞLANGIÇ VE TEMEL OYUN DEĞİŞKENLERİ ---
         const PLAYER_KINGDOM_ID = "OYUNCU_KRALLIGI";
         const NEW_POWERFUL_RIVAL_ID = "DEMIR_YUMRUK_IMPARATORLUGU";
@@ -494,6 +526,16 @@
 
         let gameState = {};
         
+        // --- Oyun İçi Müzik Döngüsü ---
+        gameplayMusic.addEventListener('ended', () => {
+            currentTrackIndex++;
+            if (currentTrackIndex >= gameplayPlaylist.length) {
+                currentTrackIndex = 0; // Listenin başına dön
+            }
+            gameplayMusic.src = gameplayPlaylist[currentTrackIndex];
+            gameplayMusic.play();
+        });
+
         // --- REHBER SİSTEMİ ---
         const tutorialModal = document.getElementById('tutorial-modal');
         const tutorialTextEl = document.getElementById('tutorial-text');
@@ -581,6 +623,7 @@
             newGameState.selectedRegionId = newGameState.kingdoms[PLAYER_KINGDOM_ID].mainRegionId;
             return newGameState;
         }
+        
         function initializeOrLoadGame() {
             const savedGame = localStorage.getItem('tahtSavaslariGameSave');
             if (savedGame) {
@@ -592,6 +635,10 @@
                     document.getElementById('start-menu').style.display = 'none';
                     document.getElementById('game-window').style.display = 'block';
                     document.body.style.backgroundColor = '#e9ebee';
+                    
+                    gameplayMusic.src = gameplayPlaylist[currentTrackIndex];
+                    gameplayMusic.play().catch(e => console.log("Kullanıcı etkileşimi olmadan oyun içi müzik başlatılamadı."));
+
                     updateUI();
                     renderMessages();
                 } catch (e) {
@@ -609,6 +656,9 @@
             if (confirm("Emin misiniz? Mevcut ilerlemeniz silinecek ve başlangıç ekranına döneceksiniz.")) {
                 localStorage.removeItem('tahtSavaslariGameSave');
                 localStorage.removeItem('tahtSavaslariTutorialCompleted');
+                
+                gameplayMusic.pause();
+
                 document.getElementById('game-window').style.display = 'none';
                 document.getElementById('start-menu').style.display = 'flex';
                 document.body.style.backgroundColor = '#1a1a1a';
@@ -621,8 +671,13 @@
             document.getElementById('game-window').style.display = 'none';
             document.getElementById('start-menu').style.display = 'flex';
             document.body.style.backgroundColor = '#1a1a1a';
+            gameplayMusic.pause();
         });
         document.getElementById('play-button').addEventListener('click', () => {
+            // Müzik geçişi
+            gameplayMusic.src = gameplayPlaylist[currentTrackIndex];
+            gameplayMusic.play().catch(e => console.log("Kullanıcı etkileşimi olmadan oyun içi müzik başlatılamadı."));
+
             let kingdomName = document.getElementById('kingdom-name-input').value.trim();
             if (!kingdomName) kingdomName = "Benim Krallığım";
 
@@ -707,12 +762,11 @@
             return false;
         }
 
-        // --- MODAL & BUTTON LOGIC ---
-        // (Tüm modal event listener'ları ve fonksiyonları buraya eklenecek, önceki cevapla aynıdır)
-   // --- MODAL & BUTTON LOGIC ---
+    // --- MODAL & BUTTON LOGIC ---
     // Barracks Modal
     const barracksModal = document.getElementById('barracks-modal');
     document.getElementById('barracks-btn').addEventListener('click', () => {
+        sfxBarracks.play(); // YENİ: Ses efekti
         const player = gameState.kingdoms[PLAYER_KINGDOM_ID];
         document.getElementById('modal-recruitable-pop').textContent = player.recruitablePop;
         document.getElementById('modal-current-gold').textContent = player.gold;
@@ -762,6 +816,7 @@
 
     const taxModal = document.getElementById('tax-modal');
     document.getElementById('tax-btn').addEventListener('click', () => {
+        sfxTax.play(); // Ses efekti
         const player = gameState.kingdoms[PLAYER_KINGDOM_ID];
         document.getElementById('tax-rate-slider').value = player.taxRate;
         updateTaxModalDetails(player); taxModal.style.display = 'block';
@@ -794,6 +849,8 @@
         if (!areKingdomsAdjacent(PLAYER_KINGDOM_ID, targetRegion.owner)) { addMessage("Bu krallıkla sınır komşusu değilsiniz!", "error"); return; }
         const player = gameState.kingdoms[PLAYER_KINGDOM_ID];
         if ((player.army.infantry + player.army.archer + player.army.cavalry) < 40) { addMessage("Savaş açmak için en az 40 birimlik bir orduya sahip olmalısınız.", "error"); return; }
+        
+        sfxAttack.play(); // Ses efekti
         gameState.activeBattle = { attackerId: PLAYER_KINGDOM_ID, defenderId: targetRegion.owner, targetRegionId: targetRegion.id, playerRole: 'attacker' };
         openBattleModal();
     });
@@ -815,6 +872,7 @@
     }
 
     function openDefenseModal() {
+        sfxDefenseAlert.play(); // Ses efekti
         const attacker = gameState.kingdoms[gameState.activeBattle.attackerId];
         document.getElementById('defense-modal-title').textContent = `${attacker.name} Saldırısına Karşı Savunma Planı`;
         const grid = document.getElementById('defense-grid');
